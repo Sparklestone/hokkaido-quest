@@ -37,45 +37,73 @@ const Gallery = ({ images, color }) => {
 };
 
 // ─── LIVE PHOTO FETCHER ───
-// Fetches real Google Place Photos for each activity
-// Falls back to Unsplash stock images if API not configured
+// Priority: 1) Google Places API (server-side, deployed) 2) Wikimedia Commons (client-side, works everywhere) 3) Unsplash fallback
 const _photoCache = {};
 
+async function fetchWikimediaPhotos(query, count = 4) {
+  try {
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=${count + 2}&gsrnamespace=6&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=600&format=json&origin=*`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.query?.pages) return null;
+    const pages = Object.values(data.query.pages)
+      .filter(p => p.imageinfo?.[0]?.thumburl && !p.imageinfo[0].thumburl.includes('.svg'))
+      .sort((a, b) => (a.index || 99) - (b.index || 99))
+      .slice(0, count);
+    if (pages.length === 0) return null;
+    return pages.map(p => p.imageinfo[0].thumburl);
+  } catch { return null; }
+}
+
 const LiveGallery = ({ activity, color }) => {
-  const [photos, setPhotos] = useState(activity.images); // start with fallback
-  const [loading, setLoading] = useState(false);
+  const [photos, setPhotos] = useState(activity.images);
+  const [loading, setLoading] = useState(true);
   const tried = useRef(false);
 
   useEffect(() => {
     if (tried.current) return;
     tried.current = true;
-    
+
     const key = activity.mapQuery;
-    
-    // Check in-memory cache first
-    if (_photoCache[key]) {
-      setPhotos(_photoCache[key]);
-      return;
-    }
-    
-    // Try to fetch real photos from our API
-    setLoading(true);
-    fetch(`/api/places-details?query=${encodeURIComponent(activity.name + ' ' + (activity.nameJp || '') + ' Hokkaido Japan')}`)
-      .then(r => { if (!r.ok) throw new Error('API not available'); return r.json(); })
-      .then(data => {
-        if (data && data.photoRefs && data.photoRefs.length > 0) {
-          const realPhotos = data.photoRefs.slice(0, 5).map(
-            ref => `/api/places-photo?ref=${encodeURIComponent(ref)}&w=600&h=400`
-          );
-          _photoCache[key] = realPhotos;
-          setPhotos(realPhotos);
+    if (_photoCache[key]) { setPhotos(_photoCache[key]); setLoading(false); return; }
+
+    const run = async () => {
+      // 1) Try Google Places API (only works when deployed with API key)
+      try {
+        const r = await fetch(`/api/places-details?query=${encodeURIComponent(activity.name + ' ' + (activity.nameJp || '') + ' Hokkaido Japan')}`);
+        if (r.ok) {
+          const data = await r.json();
+          if (data?.photoRefs?.length > 0) {
+            const urls = data.photoRefs.slice(0, 5).map(ref => `/api/places-photo?ref=${encodeURIComponent(ref)}&w=600&h=400`);
+            _photoCache[key] = urls;
+            setPhotos(urls);
+            setLoading(false);
+            return;
+          }
         }
-        // If no photoRefs, keep the fallback Unsplash images
-      })
-      .catch(() => {
-        // API not configured or failed — keep fallback images silently
-      })
-      .finally(() => setLoading(false));
+      } catch {}
+
+      // 2) Try Wikimedia Commons (works client-side, no API key needed)
+      const searchTerms = [
+        activity.nameJp + ' ' + activity.name,
+        activity.name + ' Hokkaido',
+        activity.name + ' Japan',
+      ];
+      for (const term of searchTerms) {
+        const wikiPhotos = await fetchWikimediaPhotos(term);
+        if (wikiPhotos && wikiPhotos.length >= 2) {
+          _photoCache[key] = wikiPhotos;
+          setPhotos(wikiPhotos);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 3) Keep fallback Unsplash images
+      setLoading(false);
+    };
+    run();
   }, [activity.mapQuery, activity.name, activity.nameJp]);
 
   return (
@@ -83,10 +111,10 @@ const LiveGallery = ({ activity, color }) => {
       {loading && (
         <div style={{
           position: "absolute", top: 8, left: 8, zIndex: 10,
-          background: "rgba(0,0,0,0.5)", borderRadius: 8, padding: "3px 10px",
-          fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "rgba(255,255,255,0.6)",
-          backdropFilter: "blur(4px)",
-        }}>Loading photos...</div>
+          background: "rgba(0,0,0,0.6)", borderRadius: 8, padding: "4px 12px",
+          fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "rgba(255,255,255,0.7)",
+          backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6,
+        }}><span style={{ display: "inline-block", animation: "pulse 1s infinite" }}>📷</span> Finding real photos...</div>
       )}
       <Gallery images={photos} color={color} />
     </div>
