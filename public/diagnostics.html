@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hokkaido Quest — System Diagnostics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0a1a; color: #fff; font-family: 'Zen Kaku Gothic New', sans-serif; padding: 24px; min-height: 100vh; }
+    .title { font-family: 'Dela Gothic One'; font-size: 28px; background: linear-gradient(135deg, #FFE66D, #FF6B6B, #4ECDC4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: rgba(255,255,255,0.4); margin-bottom: 32px; letter-spacing: 2px; }
+    .btn { background: linear-gradient(135deg, #4ECDC4, #1A535C); border: none; border-radius: 12px; padding: 14px 32px; color: #fff; font-family: 'Dela Gothic One'; font-size: 16px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 20px rgba(78,205,196,0.3); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(78,205,196,0.4); }
+    .btn:disabled { opacity: 0.5; cursor: wait; transform: none; }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 20px; margin-bottom: 14px; transition: border-color 0.3s; }
+    .card.pass { border-color: rgba(78,205,196,0.3); }
+    .card.fail { border-color: rgba(255,107,107,0.3); }
+    .card.warn { border-color: rgba(255,230,109,0.3); }
+    .card-title { font-family: 'Dela Gothic One'; font-size: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .card-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; }
+    .card-row:last-child { border-bottom: none; }
+    .card-row .label { color: rgba(255,255,255,0.45); }
+    .card-row .value { color: rgba(255,255,255,0.8); text-align: right; max-width: 60%; word-break: break-all; }
+    .score { font-family: 'Dela Gothic One'; font-size: 22px; text-align: center; margin: 24px 0; padding: 18px; background: rgba(255,255,255,0.04); border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #4ECDC4; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .loading-msg { text-align: center; color: rgba(255,255,255,0.5); font-size: 15px; padding: 40px; }
+    pre { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; overflow-x: auto; font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 12px; }
+    .help { background: rgba(255,230,109,0.08); border: 1px solid rgba(255,230,109,0.2); border-radius: 10px; padding: 14px 18px; margin-top: 8px; font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.7; }
+    .help strong { color: #FFE66D; }
+  </style>
+</head>
+<body>
+  <div style="max-width: 620px; margin: 0 auto;">
+    <div class="title">北海道 System Check</div>
+    <div class="subtitle">HOKKAIDO QUEST DIAGNOSTICS</div>
+
+    <button class="btn" id="runBtn" onclick="runChecks()">🔍 Run All Checks</button>
+
+    <div id="output" style="margin-top: 24px;"></div>
+  </div>
+
+  <script>
+    async function runChecks() {
+      const btn = document.getElementById('runBtn');
+      const out = document.getElementById('output');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Running diagnostics...';
+      out.innerHTML = '<div class="loading-msg"><span class="spinner"></span> Testing Google Places, Routes, Photos, Redis cache...</div>';
+
+      try {
+        const res = await fetch('/api/health');
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        const data = await res.json();
+        renderResults(data);
+      } catch (e) {
+        out.innerHTML = `
+          <div class="card fail">
+            <div class="card-title">❌ Health Check Failed</div>
+            <div class="card-row"><span class="label">Error</span><span class="value">${e.message}</span></div>
+          </div>
+          <div class="help">
+            <strong>Common causes:</strong><br>
+            • App not deployed to Vercel yet (API routes only work on Vercel, not in local <code>npm run dev</code>)<br>
+            • Use <code>npx vercel dev</code> for local testing with API routes<br>
+            • Make sure environment variables are set in Vercel project settings
+          </div>
+        `;
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '🔍 Run All Checks Again';
+    }
+
+    function renderResults(data) {
+      const out = document.getElementById('output');
+      let html = '';
+
+      // Score banner
+      const allGood = data.allPassed;
+      html += `<div class="score" style="color: ${allGood ? '#4ECDC4' : '#FF6B6B'}">
+        ${data.summary}<br>
+        <span style="font-size: 14px; color: rgba(255,255,255,0.4)">${data.score}</span>
+      </div>`;
+
+      // Individual checks
+      for (const [key, check] of Object.entries(data.checks)) {
+        const cls = check.passed === true ? 'pass' : check.passed === false ? 'fail' : 'warn';
+        const icon = check.passed === true ? '✅' : check.passed === false ? '❌' : '⚠️';
+
+        html += `<div class="card ${cls}">`;
+        html += `<div class="card-title">${icon} ${check.name}</div>`;
+
+        for (const [k, v] of Object.entries(check)) {
+          if (k === 'name' || k === 'passed') continue;
+          if (typeof v === 'object' && v !== null) {
+            html += `<div class="card-row"><span class="label">${k}</span><span class="value"><pre>${JSON.stringify(v, null, 2)}</pre></span></div>`;
+          } else {
+            html += `<div class="card-row"><span class="label">${k}</span><span class="value">${v}</span></div>`;
+          }
+        }
+
+        // Add fix hints for failures
+        if (!check.passed) {
+          html += renderFixHint(key, check);
+        }
+
+        html += '</div>';
+      }
+
+      // Raw JSON toggle
+      html += `<details style="margin-top: 16px;"><summary style="cursor: pointer; color: rgba(255,255,255,0.35); font-size: 13px;">View raw JSON response</summary><pre>${JSON.stringify(data, null, 2)}</pre></details>`;
+
+      out.innerHTML = html;
+    }
+
+    function renderFixHint(key, check) {
+      const hints = {
+        env: `<div class="help"><strong>Fix:</strong> Go to Vercel → Project Settings → Environment Variables and add <code>GOOGLE_MAPS_API_KEY</code></div>`,
+        placesSearch: `<div class="help"><strong>Fix:</strong> In Google Cloud Console → APIs & Services → Library, search for <strong>Places API (New)</strong> and click <strong>Enable</strong>. Make sure your API key is not restricted to wrong domains.</div>`,
+        placesAutocomplete: `<div class="help"><strong>Fix:</strong> Same as Places Search — enable <strong>Places API (New)</strong> in Google Cloud Console. Autocomplete is part of the same API.</div>`,
+        placesPhotos: `<div class="help"><strong>Fix:</strong> Photos require Places API (New) to be enabled. If Places Search works but Photos don't, check that your API key doesn't have HTTP referrer restrictions blocking server-side requests (Vercel functions have no referrer).</div>`,
+        routes: `<div class="help"><strong>Fix:</strong> In Google Cloud Console → APIs & Services → Library, search for <strong>Routes API</strong> and click <strong>Enable</strong>. This is separate from the old Directions API.</div>`,
+        redis: `<div class="help"><strong>Fix:</strong> Go to <a href="https://console.upstash.com" target="_blank" style="color: #FFE66D;">console.upstash.com</a>, create a free Redis database (region: Japan/Tokyo), then copy <code>UPSTASH_REDIS_REST_URL</code> and <code>UPSTASH_REDIS_REST_TOKEN</code> to Vercel env vars. This is optional — the app works without it, just slower.</div>`,
+      };
+      return hints[key] || '';
+    }
+  </script>
+</body>
+</html>
