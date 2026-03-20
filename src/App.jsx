@@ -36,6 +36,63 @@ const Gallery = ({ images, color }) => {
   );
 };
 
+// ─── LIVE PHOTO FETCHER ───
+// Fetches real Google Place Photos for each activity
+// Falls back to Unsplash stock images if API not configured
+const _photoCache = {};
+
+const LiveGallery = ({ activity, color }) => {
+  const [photos, setPhotos] = useState(activity.images); // start with fallback
+  const [loading, setLoading] = useState(false);
+  const tried = useRef(false);
+
+  useEffect(() => {
+    if (tried.current) return;
+    tried.current = true;
+    
+    const key = activity.mapQuery;
+    
+    // Check in-memory cache first
+    if (_photoCache[key]) {
+      setPhotos(_photoCache[key]);
+      return;
+    }
+    
+    // Try to fetch real photos from our API
+    setLoading(true);
+    fetch(`/api/places-details?query=${encodeURIComponent(activity.name + ' ' + (activity.nameJp || '') + ' Hokkaido Japan')}`)
+      .then(r => { if (!r.ok) throw new Error('API not available'); return r.json(); })
+      .then(data => {
+        if (data && data.photoRefs && data.photoRefs.length > 0) {
+          const realPhotos = data.photoRefs.slice(0, 5).map(
+            ref => `/api/places-photo?ref=${encodeURIComponent(ref)}&w=600&h=400`
+          );
+          _photoCache[key] = realPhotos;
+          setPhotos(realPhotos);
+        }
+        // If no photoRefs, keep the fallback Unsplash images
+      })
+      .catch(() => {
+        // API not configured or failed — keep fallback images silently
+      })
+      .finally(() => setLoading(false));
+  }, [activity.mapQuery, activity.name, activity.nameJp]);
+
+  return (
+    <div style={{ position: "relative" }}>
+      {loading && (
+        <div style={{
+          position: "absolute", top: 8, left: 8, zIndex: 10,
+          background: "rgba(0,0,0,0.5)", borderRadius: 8, padding: "3px 10px",
+          fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "rgba(255,255,255,0.6)",
+          backdropFilter: "blur(4px)",
+        }}>Loading photos...</div>
+      )}
+      <Gallery images={photos} color={color} />
+    </div>
+  );
+};
+
 // ─── TILE ART ───
 const TA = { eating: c => (<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="20" r="12" fill={c + "30"} /><path d="M16 22c0 0 2 8 8 8s8-8 8-8" stroke={c} strokeWidth="2" strokeLinecap="round" fill={c + "15"} /><path d="M18 18c1-4 4-6 6-6s5 2 6 6" stroke={c} strokeWidth="1.5" fill="none" /><line x1="24" y1="30" x2="24" y2="38" stroke={c} strokeWidth="2" strokeLinecap="round" /><circle cx="21" cy="20" r="1" fill={c} /><circle cx="27" cy="20" r="1" fill={c} /></svg>), drinking: c => (<svg viewBox="0 0 48 48" fill="none"><path d="M16 12h16l-3 20h-10l-3-20z" fill={c + "20"} stroke={c} strokeWidth="1.5" /><rect x="21" y="32" width="6" height="6" rx="1" fill={c + "30"} stroke={c} strokeWidth="1" /><line x1="18" y1="38" x2="30" y2="38" stroke={c} strokeWidth="2" strokeLinecap="round" /><ellipse cx="24" cy="16" rx="6" ry="2" fill={c + "40"} /></svg>), coffee: c => (<svg viewBox="0 0 48 48" fill="none"><path d="M12 20h20v14a4 4 0 01-4 4h-12a4 4 0 01-4-4v-14z" fill={c + "20"} stroke={c} strokeWidth="1.5" /><path d="M32 22h4a3 3 0 010 6h-4" stroke={c} strokeWidth="1.5" fill="none" /><ellipse cx="22" cy="20" rx="10" ry="2" fill={c + "30"} /><path d="M18 14c0-3 2-4 2-6M22 12c0-3 2-4 2-6M26 14c0-3 2-4 2-6" stroke={c} strokeWidth="1.5" strokeLinecap="round" opacity="0.5" /></svg>), cultural: c => (<svg viewBox="0 0 48 48" fill="none"><path d="M24 8l-16 12h32l-16-12z" fill={c + "25"} stroke={c} strokeWidth="1.5" /><line x1="14" y1="20" x2="14" y2="36" stroke={c} strokeWidth="2" /><line x1="24" y1="20" x2="24" y2="36" stroke={c} strokeWidth="2" /><line x1="34" y1="20" x2="34" y2="36" stroke={c} strokeWidth="2" /><rect x="10" y="36" width="28" height="4" rx="1" fill={c + "20"} stroke={c} strokeWidth="1" /></svg>), historical: c => (<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="14" fill={c + "12"} stroke={c} strokeWidth="1.5" /><circle cx="24" cy="24" r="6" fill={c + "25"} stroke={c} strokeWidth="1" /><path d="M24 14v10l6 4" stroke={c} strokeWidth="2" strokeLinecap="round" /></svg>), adventure: c => (<svg viewBox="0 0 48 48" fill="none"><path d="M24 8l12 28H12l12-28z" fill={c + "20"} stroke={c} strokeWidth="1.5" strokeLinejoin="round" /><path d="M24 8l-6 14 6-4 6 4-6-14z" fill={c + "30"} /><circle cx="24" cy="16" r="2" fill={c} opacity="0.5" /><line x1="8" y1="36" x2="40" y2="36" stroke={c} strokeWidth="1.5" strokeLinecap="round" /></svg>), fun: c => (<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="22" r="14" fill={c + "15"} stroke={c} strokeWidth="1.5" /><circle cx="19" cy="19" r="2.5" fill={c} opacity="0.6" /><circle cx="29" cy="19" r="2.5" fill={c} opacity="0.6" /><path d="M18 27c2 4 8 4 12 0" stroke={c} strokeWidth="2" strokeLinecap="round" /></svg>), relaxing: c => (<svg viewBox="0 0 48 48" fill="none"><ellipse cx="24" cy="30" rx="16" ry="8" fill={c + "20"} stroke={c} strokeWidth="1.5" /><path d="M14 18c1-4 4-6 4-9M22 16c1-4 2-5 2-8M30 18c1-4 2-5 3-8" stroke={c} strokeWidth="2" strokeLinecap="round" opacity="0.4" /><circle cx="20" cy="28" r="3" fill={c + "25"} /></svg>), shopping: c => (<svg viewBox="0 0 48 48" fill="none"><path d="M14 18l-4 18h28l-4-18H14z" fill={c + "15"} stroke={c} strokeWidth="1.5" strokeLinejoin="round" /><path d="M18 18v-4a6 6 0 0112 0v4" stroke={c} strokeWidth="1.5" fill="none" /><circle cx="24" cy="27" r="3" fill={c + "25"} stroke={c} strokeWidth="1" /></svg>), mustsee: c => (<svg viewBox="0 0 48 48" fill="none"><path d="M24 4l6 12 14 2-10 10 2 14-12-6-12 6 2-14L4 18l14-2 6-12z" fill={c + "25"} stroke={c} strokeWidth="1.5" strokeLinejoin="round" /><circle cx="24" cy="24" r="5" fill={c + "40"} /><path d="M22 24l2 2 4-4" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>), events: c => (<svg viewBox="0 0 48 48" fill="none"><rect x="10" y="12" width="28" height="26" rx="3" fill={c + "15"} stroke={c} strokeWidth="1.5" /><line x1="10" y1="20" x2="38" y2="20" stroke={c} strokeWidth="1.5" /><line x1="18" y1="8" x2="18" y2="16" stroke={c} strokeWidth="2" strokeLinecap="round" /><line x1="30" y1="8" x2="30" y2="16" stroke={c} strokeWidth="2" strokeLinecap="round" /><circle cx="24" cy="29" r="4" fill={c + "30"} stroke={c} strokeWidth="1" /></svg>) };
 
@@ -47,24 +104,88 @@ const OptTile = ({ label, emoji, isActive, color, onClick }) => { const [h, setH
 const LocationBar = ({ loc, color }) => {
   const [editing, setEditing] = useState(false);
   const [addr, setAddr] = useState("");
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState("");
   const defaults = { rusutsu: "Rusutsu Resort, 13 Izumikawa, Rusutsu, Hokkaido 048-1711", niseko: "Hirafu Village, Kutchan, Hokkaido 044-0080", sapporo: "Sapporo Station, Kita 6 Jonishi, Kita-ku, Sapporo 060-0806" };
   const current = addr || defaults[loc] || "";
+
+  const findMe = () => {
+    if (!navigator.geolocation) {
+      setLocError("Geolocation not supported");
+      setTimeout(() => setLocError(""), 3000);
+      return;
+    }
+    setLocating(true);
+    setLocError("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        // Try reverse geocode through our API
+        fetch(`/api/places-details?query=${latitude},${longitude}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data?.address) {
+              setAddr(data.address);
+            } else {
+              // Fallback: show raw coordinates
+              setAddr(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+            }
+          })
+          .catch(() => {
+            setAddr(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+          })
+          .finally(() => setLocating(false));
+      },
+      (err) => {
+        setLocating(false);
+        const msgs = { 1: "Location access denied — check your browser settings", 2: "Position unavailable — try again", 3: "Request timed out — try again" };
+        setLocError(msgs[err.code] || "Could not get location");
+        setTimeout(() => setLocError(""), 4000);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
+
   return (
-    <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-      <span style={{ fontSize: 16 }}>📍</span>
-      {editing ? (
-        <div style={{ flex: 1, display: "flex", gap: 8, alignItems: "center" }}>
-          <input value={addr} onChange={e => setAddr(e.target.value)} placeholder="Search address, hotel, restaurant..." style={{ flex: 1, background: "rgba(255,255,255,0.08)", border: `1px solid ${color}40`, borderRadius: 8, padding: "8px 12px", color: "#fff", fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, outline: "none" }} autoFocus />
-          <button onClick={() => setEditing(false)} style={{ background: `${color}25`, border: `1px solid ${color}50`, borderRadius: 8, padding: "6px 14px", color: color, cursor: "pointer", fontFamily: "'Dela Gothic One'", fontSize: 12 }}>Set</button>
-        </div>
-      ) : (
-        <>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: 1, marginBottom: 2 }}>YOUR LOCATION</div>
-            <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.7)" }}>{current}<CopyBtn text={current} color={color} /></div>
+    <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", padding: "12px 16px", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 16 }}>📍</span>
+        {editing ? (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input value={addr} onChange={e => setAddr(e.target.value)} placeholder="Search address, hotel, restaurant..." style={{ flex: 1, background: "rgba(255,255,255,0.08)", border: `1px solid ${color}40`, borderRadius: 8, padding: "8px 12px", color: "#fff", fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, outline: "none" }} autoFocus />
+              <button onClick={() => setEditing(false)} style={{ background: `${color}25`, border: `1px solid ${color}50`, borderRadius: 8, padding: "6px 14px", color: color, cursor: "pointer", fontFamily: "'Dela Gothic One'", fontSize: 12, whiteSpace: "nowrap" }}>Set</button>
+            </div>
+            <button onClick={findMe} disabled={locating} style={{
+              background: locating ? `${color}15` : "rgba(255,255,255,0.06)",
+              border: `1px solid ${locating ? color + "40" : "rgba(255,255,255,0.12)"}`,
+              borderRadius: 8, padding: "8px 14px", cursor: locating ? "wait" : "pointer",
+              fontFamily: "'Dela Gothic One'", fontSize: 12,
+              color: locating ? color : "rgba(255,255,255,0.55)",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              transition: "all 0.2s", width: "100%",
+            }}>
+              {locating ? (
+                <><span style={{ display: "inline-block", animation: "pulse 1s infinite" }}>📡</span> Finding your location...</>
+              ) : (
+                <>🧭 Use My Location</>
+              )}
+            </button>
           </div>
-          <button onClick={() => setEditing(true)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "5px 12px", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12 }}>✏️ Edit</button>
-        </>
+        ) : (
+          <>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: 1, marginBottom: 2 }}>YOUR LOCATION</div>
+              <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.7)" }}>{current}<CopyBtn text={current} color={color} /></div>
+            </div>
+            <button onClick={() => setEditing(true)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "5px 12px", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12 }}>✏️ Edit</button>
+          </>
+        )}
+      </div>
+      {locError && (
+        <div style={{ marginTop: 8, fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "#ff6b6b", background: "rgba(255,100,100,0.1)", border: "1px solid rgba(255,100,100,0.2)", borderRadius: 8, padding: "6px 12px" }}>
+          ⚠️ {locError}
+        </div>
       )}
     </div>
   );
@@ -241,7 +362,7 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime }) => {
       </div>
       <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 19, color: "#fff", marginBottom: 2, paddingRight: 200 }}>{a.name}<CopyBtn text={a.name} color={color} /></div>
       <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: color, marginBottom: 14, opacity: 0.8, letterSpacing: 1 }}>{a.nameJp}<CopyBtn text={a.nameJp} color={color} /></div>
-      <Gallery images={a.images} color={color} />
+      <LiveGallery activity={a} color={color} />
       <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, marginBottom: 14 }}>{a.desc}</div>
       {a.eventWindow && <div style={{ background: `${color}18`, border: `1px solid ${color}30`, borderRadius: 8, padding: "6px 12px", marginBottom: 12, fontFamily: "'Dela Gothic One'", fontSize: 13, color: color, display: "inline-block" }}>🗓️ {a.eventWindow}</div>}
       <div style={{ background: `${color}12`, border: `1px solid ${color}25`, borderRadius: 10, padding: "10px 14px", marginBottom: 16, display: "flex", gap: 8, alignItems: "flex-start" }}><span style={{ fontSize: 14, flexShrink: 0 }}>💡</span><span style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: color, lineHeight: 1.5, fontStyle: "italic" }}>{a.tip}</span></div>
@@ -334,7 +455,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: L ? L.bg : "linear-gradient(135deg,#0a0a1a 0%,#1a0a2e 50%,#0a1628 100%)", color: "#fff", position: "relative", overflow: "hidden", transition: "background 0.6s" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');@keyframes pf{0%{transform:translateY(-20px) rotate(0) translateX(0);opacity:0}10%{opacity:1}90%{opacity:.6}100%{transform:translateY(100vh) rotate(360deg) translateX(60px);opacity:0}}@keyframes si{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes bi{0%{transform:translateX(-50%) scale(.3);opacity:0}50%{transform:translateX(-50%) scale(1.05)}100%{transform:translateX(-50%) scale(1);opacity:1}}input[type="range"]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;outline:none;background:rgba(255,255,255,.1)}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:${L ? L.color : "#FFE66D"};cursor:pointer;box-shadow:0 0 12px ${L ? L.color + "88" : "#FFE66D88"}}*{box-sizing:border-box}a{color:inherit}select{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-family:'Zen Kaku Gothic New';font-size:14px;outline:none;cursor:pointer}select option{background:#1a1a2e;color:#fff}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');@keyframes pf{0%{transform:translateY(-20px) rotate(0) translateX(0);opacity:0}10%{opacity:1}90%{opacity:.6}100%{transform:translateY(100vh) rotate(360deg) translateX(60px);opacity:0}}@keyframes si{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes bi{0%{transform:translateX(-50%) scale(.3);opacity:0}50%{transform:translateX(-50%) scale(1.05)}100%{transform:translateX(-50%) scale(1);opacity:1}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}input[type="range"]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;outline:none;background:rgba(255,255,255,.1)}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:${L ? L.color : "#FFE66D"};cursor:pointer;box-shadow:0 0 12px ${L ? L.color + "88" : "#FFE66D88"}}*{box-sizing:border-box}a{color:inherit}select{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-family:'Zen Kaku Gothic New';font-size:14px;outline:none;cursor:pointer}select option{background:#1a1a2e;color:#fff}`}</style>
       <Petals />
 
       {/* HEADER */}
