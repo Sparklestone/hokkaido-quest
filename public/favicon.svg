@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f2027"/>
+      <stop offset="50%" style="stop-color:#1a1a3e"/>
+      <stop offset="100%" style="stop-color:#2d1b69"/>
+    </linearGradient>
+    <linearGradient id="text" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFE66D"/>
+      <stop offset="50%" style="stop-color:#FF6B6B"/>
+      <stop offset="100%" style="stop-color:#4ECDC4"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Sakura petal decorations -->
+  <circle cx="80" cy="80" r="20" fill="#FF6B6B" opacity="0.15"/>
+  <circle cx="432" cy="432" r="25" fill="#4ECDC4" opacity="0.15"/>
+  <circle cx="420" cy="90" r="15" fill="#FFE66D" opacity="0.12"/>
+  <!-- Main kanji 北 (North) -->
+  <text x="256" y="310" text-anchor="middle" font-size="260" font-family="serif" font-weight="bold" fill="url(#text)">北</text>
+  <!-- Subtitle -->
+  <text x="256" y="420" text-anchor="middle" font-size="64" font-family="sans-serif" font-weight="bold" fill="rgba(255,255,255,0.6)" letter-spacing="16">HQ</text>
+</svg>
