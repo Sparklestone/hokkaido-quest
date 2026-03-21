@@ -447,17 +447,22 @@ const isOp = (a, ar) => ar >= a.openH && (ar + a.activityMin / 60) <= a.closeH +
 const Petals = () => (<div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1, overflow: "hidden" }}>{Array.from({ length: 12 }, (_, i) => (<div key={i} style={{ position: "absolute", left: `${(i * 8.5) % 100}%`, top: -20, width: 8 + (i % 4) * 2, height: (8 + (i % 4) * 2) * 0.7, background: "radial-gradient(ellipse,rgba(255,183,197,0.65),rgba(255,140,160,0.2))", borderRadius: "50% 0 50% 50%", animation: `pf ${7 + (i % 4) * 2}s ${(i * 0.6) % 7}s linear infinite`, filter: "blur(0.5px)" }} />))}</div>);
 
 // ─── CARD ───
-const Cd = ({ a, color, i, dH, dM, tMode, noTime }) => {
+const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
   const mult = travelMult(tMode);
   const adjTravel = Math.round(a.travelMin * mult);
   const tot = adjTravel * 2 + a.activityMin;
   const dd = dH + dM / 60, ar = dd + adjTravel / 60, bk = dd + tot / 60;
   const cat = CATEGORIES.find(c => c.id === a.cat);
-  const map = `https://www.google.com/maps/search/?api=1&query=${a.mapQuery}`;
+  const v = a._verified;
+  const map = (v?.mapsUrl || a._mapsUrl) ? (v?.mapsUrl || a._mapsUrl) : `https://www.google.com/maps/search/?api=1&query=${a.mapQuery}`;
   return (
-    <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "20px 22px", animation: `si 0.5s ${i * 0.07}s both cubic-bezier(0.22,1,0.36,1)`, position: "relative", overflow: "hidden", transition: "border-color 0.3s" }} onMouseEnter={e => e.currentTarget.style.borderColor = color + "44"} onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"}>
-      <div style={{ display: "flex", gap: 6, position: "absolute", top: 14, right: 14, zIndex: 5 }}>
+    <div style={{ background: v?.status === 'temp_closed' ? "rgba(255,100,50,0.06)" : "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", border: `1px solid ${v?.status === 'temp_closed' ? 'rgba(255,100,50,0.2)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 16, padding: "20px 22px", animation: `si 0.5s ${i * 0.07}s both cubic-bezier(0.22,1,0.36,1)`, position: "relative", overflow: "hidden", transition: "border-color 0.3s" }} onMouseEnter={e => e.currentTarget.style.borderColor = color + "44"} onMouseLeave={e => e.currentTarget.style.borderColor = v?.status === 'temp_closed' ? "rgba(255,100,50,0.2)" : "rgba(255,255,255,0.08)"}>
+      {v?.status === 'temp_closed' && <div style={{ background: "rgba(255,100,50,0.15)", border: "1px solid rgba(255,100,50,0.3)", borderRadius: 10, padding: "8px 14px", marginBottom: 14, fontFamily: "'Dela Gothic One'", fontSize: 13, color: "#ff8844", display: "flex", alignItems: "center", gap: 6 }}>⚠️ Temporarily Closed — verify before visiting</div>}
+      <div style={{ display: "flex", gap: 6, position: "absolute", top: 14, right: 14, zIndex: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
         {a.pop && <div style={{ background: "rgba(255,100,100,0.2)", border: "1px solid rgba(255,100,100,0.4)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff8888" }}>🔥 Popular</div>}
+        {isClosest && <div style={{ background: `${color}20`, border: `1px solid ${color}40`, borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: color }}>📍 Closest</div>}
+        {v?.isOpenNow === true && <div style={{ background: "rgba(50,200,100,0.15)", border: "1px solid rgba(50,200,100,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#44cc66" }}>● Open Now</div>}
+        {v?.isOpenNow === false && <div style={{ background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff6666" }}>● Closed</div>}
         {cat && <div style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "4px 12px", display: "flex", alignItems: "center", gap: 5, fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}><span style={{ fontSize: 16 }}>{cat.emoji}</span> {cat.label}</div>}
         <div style={{ background: `linear-gradient(135deg,${color},${color}cc)`, color: "#000", fontFamily: "'Dela Gothic One'", fontSize: 13, padding: "4px 11px", borderRadius: 20 }}>★ {a.rating}</div>
       </div>
@@ -475,6 +480,7 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime }) => {
         <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "5px 12px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} {adjTravel}min each way</div>
         <div style={{ background: `${color}20`, borderRadius: 8, padding: "5px 12px", fontFamily: "'Dela Gothic One'", fontSize: 13, color: color }}>⌛ {fmtD(tot)} total</div>
         <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "5px 12px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{a.cost}</div>
+        {v && v.status === 'open' && <div style={{ background: "rgba(50,200,100,0.1)", border: "1px solid rgba(50,200,100,0.2)", borderRadius: 8, padding: "5px 10px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "rgba(50,200,100,0.7)" }}>✓ Verified</div>}
         <a href={map} target="_blank" rel="noopener noreferrer" style={{ marginLeft: "auto", background: `${color}20`, border: `1px solid ${color}40`, borderRadius: 8, padding: "5px 14px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: color, textDecoration: "none" }}>📍 Map</a>
       </div>
     </div>
@@ -502,6 +508,44 @@ export default function App() {
   // Reset to singles tab when noTime enabled (combos/extra unavailable)
   useEffect(() => { if (noTime && tab !== "single") setTab("single"); }, [noTime]);
 
+  // ── Activity Verification ──
+  const [verified, setVerified] = useState({}); // { mapQuery: { status, rating, openH, closeH, ... } }
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState(null);
+  const verifiedLoc = useRef(null);
+
+  useEffect(() => {
+    if (!loc || verifiedLoc.current === loc) return;
+    verifiedLoc.current = loc;
+    setVerifying(true);
+    setVerifyError(null);
+    const activities = DA[loc].map(a => ({ name: a.name, nameJp: a.nameJp, mapQuery: a.mapQuery }));
+    fetch('/api/verify-activities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activities, location: loc }),
+    })
+      .then(r => { if (!r.ok) throw new Error('Verification unavailable'); return r.json(); })
+      .then(data => {
+        if (data.results) setVerified(prev => ({ ...prev, ...data.results }));
+      })
+      .catch(() => setVerifyError('Could not verify — showing cached data'))
+      .finally(() => setVerifying(false));
+  }, [loc]);
+
+  // Merge verified data into an activity (override hours/rating if Google has fresher data)
+  const mergeVerified = useCallback((a) => {
+    const v = verified[a.mapQuery];
+    if (!v || v.status === 'error' || v.status === 'not_found') return a;
+    const merged = { ...a };
+    if (v.rating && v.ratingCount > 5) merged.rating = v.rating;
+    if (v.openH !== null && v.openH !== undefined) merged.openH = v.openH;
+    if (v.closeH !== null && v.closeH !== undefined) merged.closeH = v.closeH;
+    if (v.mapsUrl) merged._mapsUrl = v.mapsUrl;
+    merged._verified = v;
+    return merged;
+  }, [verified]);
+
   const L = loc ? LOCATIONS[loc] : null;
   const dep = dH + dM / 60;
   const backStr = fmt(Math.floor(dep + time / 60), Math.round(((dep + time / 60) % 1) * 60));
@@ -510,7 +554,9 @@ export default function App() {
 
   const filtered = useMemo(() => {
     if (!loc) return [];
-    return DA[loc].filter(a => {
+    return DA[loc].map(mergeVerified).filter(a => {
+      // Filter out permanently closed places
+      if (a._verified?.status === 'perm_closed') return false;
       const adjTravel = Math.round(a.travelMin * mult);
       if (!noTime && adjTravel > maxTravel) return false;
       if (!noTime && adjTravel * 2 + a.activityMin > time) return false;
@@ -519,11 +565,12 @@ export default function App() {
       if (!noTime && !isOp(a, dep + adjTravel / 60)) return false;
       return true;
     }).sort((a, b) => sort === "rating" ? b.rating - a.rating : sort === "time" ? (Math.round(a.travelMin * mult) * 2 + a.activityMin) - (Math.round(b.travelMin * mult) * 2 + b.activityMin) : Math.round(a.travelMin * mult) - Math.round(b.travelMin * mult));
-  }, [loc, time, cats, free, sort, dep, mult, maxTravel, noTime]);
+  }, [loc, time, cats, free, sort, dep, mult, maxTravel, noTime, mergeVerified]);
 
   const extra = useMemo(() => {
     if (!loc || noTime) return [];
-    return DA[loc].filter(a => {
+    return DA[loc].map(mergeVerified).filter(a => {
+      if (a._verified?.status === 'perm_closed') return false;
       const adj = Math.round(a.travelMin * mult);
       const t = adj * 2 + a.activityMin;
       if (t <= time) return false;
@@ -532,7 +579,7 @@ export default function App() {
       if (!isOp(a, dep + adj / 60)) return false;
       return true;
     }).sort((a, b) => (Math.round(a.travelMin * mult) * 2 + a.activityMin) - (Math.round(b.travelMin * mult) * 2 + b.activityMin));
-  }, [loc, time, cats, free, dep, mult, noTime]);
+  }, [loc, time, cats, free, dep, mult, noTime, mergeVerified]);
 
   const combos = useMemo(() => {
     if (!loc || noTime) return [];
@@ -681,6 +728,23 @@ export default function App() {
         {scr === "results" && L && <div style={{ paddingTop: 24, animation: "fu 0.4s both" }}>
           <LocationBar loc={loc} color={L.color} />
 
+          {verifying && <div style={{ background: `${L.color}10`, border: `1px solid ${L.color}20`, borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: L.color, display: "flex", alignItems: "center", gap: 8 }}><span style={{ animation: "pulse 1.2s infinite" }}>📡</span> Verifying activity hours and status with Google...</div>}
+          {!verifying && Object.keys(verified).length > 0 && (() => {
+            const locActs = DA[loc] || [];
+            const tempCl = locActs.filter(a => verified[a.mapQuery]?.status === 'temp_closed').length;
+            const permCl = locActs.filter(a => verified[a.mapQuery]?.status === 'perm_closed').length;
+            const okCount = locActs.filter(a => verified[a.mapQuery]?.status === 'open').length;
+            return (tempCl > 0 || permCl > 0) ? (
+              <div style={{ background: "rgba(255,150,50,0.08)", border: "1px solid rgba(255,150,50,0.2)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
+                ✓ <span style={{ color: "rgba(50,200,100,0.8)" }}>{okCount} verified</span>
+                {tempCl > 0 && <> · <span style={{ color: "#ff8844" }}>⚠️ {tempCl} temporarily closed</span></>}
+                {permCl > 0 && <> · <span style={{ color: "#ff6666" }}>❌ {permCl} permanently closed (hidden)</span></>}
+              </div>
+            ) : okCount > 0 ? (
+              <div style={{ background: "rgba(50,200,100,0.06)", border: "1px solid rgba(50,200,100,0.15)", borderRadius: 10, padding: "8px 14px", marginBottom: 14, fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(50,200,100,0.6)" }}>✓ {okCount} activities verified — hours and ratings up to date</div>
+            ) : null;
+          })()}
+          {verifyError && <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "8px 14px", marginBottom: 14, fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>ℹ️ {verifyError}</div>}
           <div style={{ display: "flex", background: "rgba(255,255,255,0.04)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", marginBottom: 20, overflow: "hidden", position: "relative", zIndex: 2 }}>
             {[{ k: "single", l: `🎯 All (${filtered.length})`, show: true }, { k: "combo", l: `⛓️ Combos (${combos.length})`, show: !noTime }, { k: "extra", l: `⏳ Extra (${extra.length})`, show: !noTime }].filter(t => t.show).map(t => (
               <button key={t.k} onClick={() => { setTab(t.k); setExpC(null); }} style={{ flex: 1, padding: "12px 10px", cursor: "pointer", border: "none", background: tab === t.k ? `${L.color}20` : "transparent", color: tab === t.k ? L.color : "rgba(255,255,255,0.45)", fontFamily: "'Dela Gothic One'", fontSize: 12, borderBottom: tab === t.k ? `2px solid ${L.color}` : "2px solid transparent" }}>{t.l}</button>
