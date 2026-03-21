@@ -561,17 +561,21 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
   return (
     <div style={{ background: v?.status === 'temp_closed' ? "rgba(255,100,50,0.06)" : "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", border: `1px solid ${v?.status === 'temp_closed' ? 'rgba(255,100,50,0.2)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 16, padding: "20px 22px", animation: `si 0.5s ${i * 0.07}s both cubic-bezier(0.22,1,0.36,1)`, position: "relative", overflow: "hidden", transition: "border-color 0.3s" }} onMouseEnter={e => e.currentTarget.style.borderColor = color + "44"} onMouseLeave={e => e.currentTarget.style.borderColor = v?.status === 'temp_closed' ? "rgba(255,100,50,0.2)" : "rgba(255,255,255,0.08)"}>
       {v?.status === 'temp_closed' && <div style={{ background: "rgba(255,100,50,0.15)", border: "1px solid rgba(255,100,50,0.3)", borderRadius: 10, padding: "8px 14px", marginBottom: 14, fontFamily: "'Dela Gothic One'", fontSize: 13, color: "#ff8844", display: "flex", alignItems: "center", gap: 6 }}>⚠️ Temporarily Closed — verify before visiting</div>}
-      <div style={{ display: "flex", gap: 6, position: "absolute", top: 14, right: 14, zIndex: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
-        {a.pop && <div style={{ background: "rgba(255,100,100,0.2)", border: "1px solid rgba(255,100,100,0.4)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff8888" }}>🔥 Popular</div>}
-        {isClosest && <div style={{ background: `${color}20`, border: `1px solid ${color}40`, borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: color }}>📍 Closest</div>}
-        {v?.isOpenNow === true && <div style={{ background: "rgba(50,200,100,0.15)", border: "1px solid rgba(50,200,100,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#44cc66" }}>● Open Now</div>}
-        {v?.isOpenNow === false && <div style={{ background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff6666" }}>● Closed</div>}
-        {cat && <div style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "4px 12px", display: "flex", alignItems: "center", gap: 5, fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}><span style={{ fontSize: 16 }}>{cat.emoji}</span> {cat.label}</div>}
-        <div style={{ background: `linear-gradient(135deg,${color},${color}cc)`, color: "#000", fontFamily: "'Dela Gothic One'", fontSize: 13, padding: "4px 11px", borderRadius: 20 }}>★ {a.rating}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 4 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 19, color: "#fff", marginBottom: 2 }}>{a.name}<CopyBtn text={a.name} color={color} /></div>
+          <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: color, opacity: 0.8, letterSpacing: 1 }}>{a.nameJp}<CopyBtn text={a.nameJp} color={color} /></div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "auto auto", gap: 5, flexShrink: 0, justifyItems: "end" }}>
+          {a.pop && <div style={{ background: "rgba(255,100,100,0.2)", border: "1px solid rgba(255,100,100,0.4)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff8888", whiteSpace: "nowrap" }}>🔥 Popular</div>}
+          {isClosest && <div style={{ background: `${color}20`, border: `1px solid ${color}40`, borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: color, whiteSpace: "nowrap" }}>📍 Closest</div>}
+          {v?.isOpenNow === true && <div style={{ background: "rgba(50,200,100,0.15)", border: "1px solid rgba(50,200,100,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#44cc66", whiteSpace: "nowrap" }}>● Open Now</div>}
+          {v?.isOpenNow === false && <div style={{ background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff6666", whiteSpace: "nowrap" }}>● Closed</div>}
+          {cat && <div style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "4px 12px", display: "flex", alignItems: "center", gap: 5, fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: 600, whiteSpace: "nowrap" }}><span style={{ fontSize: 14 }}>{cat.emoji}</span> {cat.label}</div>}
+          <div style={{ background: `linear-gradient(135deg,${color},${color}cc)`, color: "#000", fontFamily: "'Dela Gothic One'", fontSize: 13, padding: "4px 11px", borderRadius: 20, whiteSpace: "nowrap" }}>★ {a.rating}</div>
+        </div>
       </div>
-      <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 19, color: "#fff", marginBottom: 2, paddingRight: 200 }}>{a.name}<CopyBtn text={a.name} color={color} /></div>
-      <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: color, marginBottom: 14, opacity: 0.8, letterSpacing: 1 }}>{a.nameJp}<CopyBtn text={a.nameJp} color={color} /></div>
-      <LiveGallery activity={a} color={color} />
+      <div style={{ marginTop: 12 }}><LiveGallery activity={a} color={color} /></div>
       <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, marginBottom: 14 }}>{a.desc}</div>
       {a.eventWindow && <div style={{ background: `${color}18`, border: `1px solid ${color}30`, borderRadius: 8, padding: "6px 12px", marginBottom: 12, fontFamily: "'Dela Gothic One'", fontSize: 13, color: color, display: "inline-block" }}>🗓️ {a.eventWindow}</div>}
       <div style={{ background: `${color}12`, border: `1px solid ${color}25`, borderRadius: 10, padding: "10px 14px", marginBottom: 16, display: "flex", gap: 8, alignItems: "flex-start" }}><span style={{ fontSize: 14, flexShrink: 0 }}>💡</span><span style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: color, lineHeight: 1.5, fontStyle: "italic" }}>{a.tip}</span></div>
@@ -612,8 +616,8 @@ export default function App() {
   // Reset to singles tab when noTime enabled (combos/extra unavailable)
   useEffect(() => { if (noTime && tab !== "single") setTab("single"); }, [noTime]);
 
-  // Scroll to top whenever screen changes (fires AFTER render)
-  useEffect(() => { window.scrollTo(0, 0); }, [scr]);
+  // Scroll to top whenever screen changes (deferred past browser layout for iOS Safari)
+  useEffect(() => { setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 0); }, [scr]);
 
   // ── Activity Verification ──
   const [verified, setVerified] = useState({}); // { mapQuery: { status, rating, openH, closeH, ... } }
