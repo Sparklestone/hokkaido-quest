@@ -558,6 +558,29 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
   const cat = CATEGORIES.find(c => c.id === a.cat);
   const v = a._verified;
   const map = (v?.mapsUrl || a._mapsUrl) ? (v?.mapsUrl || a._mapsUrl) : `https://www.google.com/maps/search/?api=1&query=${a.mapQuery}`;
+  const [showHrs, setShowHrs] = useState(false);
+
+  // Determine open/closed based on PLANNED ARRIVAL TIME, not current time
+  const arrivalH = noTime ? null : ar;
+  const effectiveOpenH = v?.openH ?? a.openH;
+  const effectiveCloseH = v?.closeH ?? a.closeH;
+  let openAtArrival = null;
+  if (arrivalH !== null && effectiveOpenH != null && effectiveCloseH != null) {
+    if (effectiveCloseH === 0 && effectiveOpenH === 0) {
+      openAtArrival = false; // Closed today
+    } else if (effectiveCloseH === 24 || effectiveCloseH === 0) {
+      openAtArrival = arrivalH >= effectiveOpenH; // 24hr
+    } else if (effectiveCloseH > effectiveOpenH) {
+      openAtArrival = arrivalH >= effectiveOpenH && arrivalH < effectiveCloseH;
+    } else {
+      // Wraps past midnight (e.g. 17-2)
+      openAtArrival = arrivalH >= effectiveOpenH || arrivalH < effectiveCloseH;
+    }
+  }
+
+  const hoursLines = v?.hours || [];
+  const hasHours = hoursLines.length > 0;
+
   return (
     <div style={{ background: v?.status === 'temp_closed' ? "rgba(255,100,50,0.06)" : "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", border: `1px solid ${v?.status === 'temp_closed' ? 'rgba(255,100,50,0.2)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 16, padding: "20px 22px", animation: `si 0.5s ${i * 0.07}s both cubic-bezier(0.22,1,0.36,1)`, position: "relative", overflow: "hidden", transition: "border-color 0.3s" }} onMouseEnter={e => e.currentTarget.style.borderColor = color + "44"} onMouseLeave={e => e.currentTarget.style.borderColor = v?.status === 'temp_closed' ? "rgba(255,100,50,0.2)" : "rgba(255,255,255,0.08)"}>
       {v?.status === 'temp_closed' && <div style={{ background: "rgba(255,100,50,0.15)", border: "1px solid rgba(255,100,50,0.3)", borderRadius: 10, padding: "8px 14px", marginBottom: 14, fontFamily: "'Dela Gothic One'", fontSize: 13, color: "#ff8844", display: "flex", alignItems: "center", gap: 6 }}>⚠️ Temporarily Closed — verify before visiting</div>}
@@ -569,12 +592,26 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
         <div style={{ display: "grid", gridTemplateColumns: "auto auto", gap: 5, flexShrink: 0, justifyItems: "end" }}>
           {a.pop && <div style={{ background: "rgba(255,100,100,0.2)", border: "1px solid rgba(255,100,100,0.4)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff8888", whiteSpace: "nowrap" }}>🔥 Popular</div>}
           {isClosest && <div style={{ background: `${color}20`, border: `1px solid ${color}40`, borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: color, whiteSpace: "nowrap" }}>📍 Closest</div>}
-          {v?.isOpenNow === true && <div style={{ background: "rgba(50,200,100,0.15)", border: "1px solid rgba(50,200,100,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#44cc66", whiteSpace: "nowrap" }}>● Open Now</div>}
-          {v?.isOpenNow === false && <div style={{ background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff6666", whiteSpace: "nowrap" }}>● Closed</div>}
+          {openAtArrival === true && <button onClick={(e) => { e.stopPropagation(); setShowHrs(p => !p); }} style={{ background: "rgba(50,200,100,0.15)", border: "1px solid rgba(50,200,100,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#44cc66", whiteSpace: "nowrap", cursor: "pointer" }}>● Open{!noTime ? ` at ${fmt(Math.floor(ar), Math.round((ar % 1) * 60))}` : ""}</button>}
+          {openAtArrival === false && <button onClick={(e) => { e.stopPropagation(); setShowHrs(p => !p); }} style={{ background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff6666", whiteSpace: "nowrap", cursor: "pointer" }}>● Closed{!noTime ? ` at ${fmt(Math.floor(ar), Math.round((ar % 1) * 60))}` : ""}</button>}
           {cat && <div style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "4px 12px", display: "flex", alignItems: "center", gap: 5, fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: 600, whiteSpace: "nowrap" }}><span style={{ fontSize: 14 }}>{cat.emoji}</span> {cat.label}</div>}
           <div style={{ background: `linear-gradient(135deg,${color},${color}cc)`, color: "#000", fontFamily: "'Dela Gothic One'", fontSize: 13, padding: "4px 11px", borderRadius: 20, whiteSpace: "nowrap" }}>★ {a.rating}</div>
         </div>
       </div>
+      {showHrs && hasHours && (
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 14px", marginBottom: 10, marginTop: 6, animation: "fu 0.2s both" }}>
+          <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: 2, marginBottom: 6 }}>HOURS OF OPERATION</div>
+          {hoursLines.map((line, li) => {
+            const isToday = line.startsWith(["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()]);
+            return <div key={li} style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: isToday ? color : "rgba(255,255,255,0.5)", lineHeight: 1.7, fontWeight: isToday ? 700 : 400 }}>{isToday ? "▸ " : ""}{line}</div>;
+          })}
+        </div>
+      )}
+      {showHrs && !hasHours && (
+        <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "8px 14px", marginBottom: 10, marginTop: 6, fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
+          Hours: {fmt(effectiveOpenH, 0)} – {fmt(effectiveCloseH > 24 ? effectiveCloseH - 24 : effectiveCloseH, 0)} (from listing)
+        </div>
+      )}
       <div style={{ marginTop: 12 }}><LiveGallery activity={a} color={color} /></div>
       <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, marginBottom: 14 }}>{a.desc}</div>
       {a.eventWindow && <div style={{ background: `${color}18`, border: `1px solid ${color}30`, borderRadius: 8, padding: "6px 12px", marginBottom: 12, fontFamily: "'Dela Gothic One'", fontSize: 13, color: color, display: "inline-block" }}>🗓️ {a.eventWindow}</div>}
@@ -616,8 +653,35 @@ export default function App() {
   // Reset to singles tab when noTime enabled (combos/extra unavailable)
   useEffect(() => { if (noTime && tab !== "single") setTab("single"); }, [noTime]);
 
-  // Scroll to top whenever screen changes (deferred past browser layout for iOS Safari)
-  useEffect(() => { setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 0); }, [scr]);
+  // Scroll to top on screen change — aggressive iOS Safari fix
+  const topRef = useRef(null);
+  useEffect(() => {
+    // Belt and suspenders: try every scroll method iOS respects
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    if (topRef.current) topRef.current.scrollIntoView();
+    // Deferred backup for iOS Safari layout timing
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+    });
+  }, [scr]);
+
+  // Header clock toggle
+  const [showClock, setShowClock] = useState(false);
+  const [clockStr, setClockStr] = useState("");
+  useEffect(() => {
+    if (!showClock) return;
+    const tick = () => {
+      const now = new Date();
+      const str = now.toLocaleString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, weekday: "short", hour: "numeric", minute: "2-digit", hour12: true, timeZoneName: "short" });
+      setClockStr(str);
+    };
+    tick();
+    const id = setInterval(tick, 10000);
+    return () => clearInterval(id);
+  }, [showClock]);
 
   // ── Activity Verification ──
   const [verified, setVerified] = useState({}); // { mapQuery: { status, rating, openH, closeH, ... } }
@@ -728,19 +792,27 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: L ? L.bg : "linear-gradient(135deg,#0a0a1a 0%,#1a0a2e 50%,#0a1628 100%)", color: "#fff", position: "relative", transition: "background 0.6s" }}>
+      <div ref={topRef} style={{ position: "absolute", top: 0, left: 0, height: 1, width: 1 }} />
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');@keyframes pf{0%{transform:translateY(-20px) rotate(0) translateX(0);opacity:0}10%{opacity:1}90%{opacity:.6}100%{transform:translateY(100vh) rotate(360deg) translateX(60px);opacity:0}}@keyframes si{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes bi{0%{transform:translateX(-50%) scale(.3);opacity:0}50%{transform:translateX(-50%) scale(1.05)}100%{transform:translateX(-50%) scale(1);opacity:1}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}input[type="range"]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;outline:none;background:rgba(255,255,255,.1)}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:${L ? L.color : "#FFE66D"};cursor:pointer;box-shadow:0 0 12px ${L ? L.color + "88" : "#FFE66D88"}}*{box-sizing:border-box}a{color:inherit}select{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-family:'Zen Kaku Gothic New';font-size:14px;outline:none;cursor:pointer}select option{background:#1a1a2e;color:#fff}`}</style>
       <Petals />
 
       {/* HEADER */}
       <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,10,26,0.75)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {scr !== "loc" && <button onClick={() => { if (scr === "results") { setScr("filters"); window.scrollTo(0, 0); } else { setScr("loc"); setLoc(null); setShowInfo(false); window.scrollTo(0, 0); } }} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, color: "#fff", padding: "6px 12px", cursor: "pointer", fontFamily: "'Zen Kaku Gothic New'", fontSize: 14 }}>← 戻る</button>}
-          <span style={{ fontFamily: "'Dela Gothic One'", fontSize: 16 }}>{L ? L.nameJp : "北海道"}</span>
-          <span style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.45)", marginLeft: 4 }}>HOKKAIDO QUEST</span>
+          {scr !== "loc" && <button onClick={() => { if (scr === "results") { setScr("filters"); } else { setScr("loc"); setLoc(null); setShowInfo(false); } }} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, color: "#fff", padding: "6px 12px", cursor: "pointer", fontFamily: "'Zen Kaku Gothic New'", fontSize: 14 }}>← 戻る</button>}
+          <button onClick={() => setShowClock(p => !p)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 8 }}>
+            {showClock ? (
+              <span style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>{clockStr}</span>
+            ) : (
+              <>
+                <span style={{ fontFamily: "'Dela Gothic One'", fontSize: 16, color: "#fff" }}>{L ? L.nameJp : "北海道"}</span>
+                <span style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.45)" }}>HOKKAIDO QUEST</span>
+              </>
+            )}
+          </button>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           {L && scr !== "loc" && <button onClick={() => setShowInfo(p => !p)} style={{ background: showInfo ? `${L.color}25` : "rgba(255,255,255,0.08)", border: `1px solid ${showInfo ? L.color + "50" : "rgba(255,255,255,0.1)"}`, borderRadius: 8, padding: "6px 14px", color: showInfo ? L.color : "rgba(255,255,255,0.6)", cursor: "pointer", fontFamily: "'Dela Gothic One'", fontSize: 12 }}>ℹ️ Info</button>}
-          {scr === "results" && L && <ShareBtn activities={filtered} title={`${L.name} Activities`} locationName={L.name} tMode={tMode} color={L.color} label="📤" />}
           {scr === "results" && L && <button onClick={() => { const p = filtered[Math.floor(Math.random() * filtered.length)]; if (p) { setSurprise(p); setTimeout(() => setSurprise(null), 4500); } }} style={{ background: `${L.color}20`, border: `1px solid ${L.color}40`, borderRadius: 8, padding: "6px 14px", color: L.color, cursor: "pointer", fontFamily: "'Dela Gothic One'", fontSize: 12 }}>🎲 Surprise</button>}
         </div>
       </div>
