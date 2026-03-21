@@ -612,6 +612,9 @@ export default function App() {
   // Reset to singles tab when noTime enabled (combos/extra unavailable)
   useEffect(() => { if (noTime && tab !== "single") setTab("single"); }, [noTime]);
 
+  // Scroll to top whenever screen changes (fires AFTER render)
+  useEffect(() => { window.scrollTo(0, 0); }, [scr]);
+
   // ── Activity Verification ──
   const [verified, setVerified] = useState({}); // { mapQuery: { status, rating, openH, closeH, ... } }
   const [verifying, setVerifying] = useState(false);
