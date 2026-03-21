@@ -560,12 +560,14 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
   const map = (v?.mapsUrl || a._mapsUrl) ? (v?.mapsUrl || a._mapsUrl) : `https://www.google.com/maps/search/?api=1&query=${a.mapQuery}`;
   const [showHrs, setShowHrs] = useState(false);
 
-  // Determine open/closed based on PLANNED ARRIVAL TIME, not current time
-  const arrivalH = noTime ? null : ar;
+  // Determine open/closed based on PLANNED ARRIVAL TIME, or CURRENT TIME when noTime
+  const now = new Date();
+  const currentH = now.getHours() + now.getMinutes() / 60;
+  const arrivalH = noTime ? currentH : ar;
   const effectiveOpenH = v?.openH ?? a.openH;
   const effectiveCloseH = v?.closeH ?? a.closeH;
   let openAtArrival = null;
-  if (arrivalH !== null && effectiveOpenH != null && effectiveCloseH != null) {
+  if (effectiveOpenH != null && effectiveCloseH != null) {
     if (effectiveCloseH === 0 && effectiveOpenH === 0) {
       openAtArrival = false; // Closed today
     } else if (effectiveCloseH === 24 || effectiveCloseH === 0) {
@@ -592,8 +594,8 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
         <div style={{ display: "grid", gridTemplateColumns: "auto auto", gap: 5, flexShrink: 0, justifyItems: "end" }}>
           {a.pop && <div style={{ background: "rgba(255,100,100,0.2)", border: "1px solid rgba(255,100,100,0.4)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff8888", whiteSpace: "nowrap" }}>🔥 Popular</div>}
           {isClosest && <div style={{ background: `${color}20`, border: `1px solid ${color}40`, borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: color, whiteSpace: "nowrap" }}>📍 Closest</div>}
-          {openAtArrival === true && <button onClick={(e) => { e.stopPropagation(); setShowHrs(p => !p); }} style={{ background: "rgba(50,200,100,0.15)", border: "1px solid rgba(50,200,100,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#44cc66", whiteSpace: "nowrap", cursor: "pointer" }}>● Open{!noTime ? ` at ${fmt(Math.floor(ar), Math.round((ar % 1) * 60))}` : ""}</button>}
-          {openAtArrival === false && <button onClick={(e) => { e.stopPropagation(); setShowHrs(p => !p); }} style={{ background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff6666", whiteSpace: "nowrap", cursor: "pointer" }}>● Closed{!noTime ? ` at ${fmt(Math.floor(ar), Math.round((ar % 1) * 60))}` : ""}</button>}
+          {openAtArrival === true && <button onClick={(e) => { e.stopPropagation(); setShowHrs(p => !p); }} style={{ background: "rgba(50,200,100,0.15)", border: "1px solid rgba(50,200,100,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#44cc66", whiteSpace: "nowrap", cursor: "pointer" }}>{noTime ? "● Open Now" : `● Open at ${fmt(Math.floor(ar), Math.round((ar % 1) * 60))}`}</button>}
+          {openAtArrival === false && <button onClick={(e) => { e.stopPropagation(); setShowHrs(p => !p); }} style={{ background: "rgba(255,80,80,0.15)", border: "1px solid rgba(255,80,80,0.3)", borderRadius: 20, padding: "3px 10px", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#ff6666", whiteSpace: "nowrap", cursor: "pointer" }}>{noTime ? "● Closed Now" : `● Closed at ${fmt(Math.floor(ar), Math.round((ar % 1) * 60))}`}</button>}
           {cat && <div style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "4px 12px", display: "flex", alignItems: "center", gap: 5, fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: 600, whiteSpace: "nowrap" }}><span style={{ fontSize: 14 }}>{cat.emoji}</span> {cat.label}</div>}
           <div style={{ background: `linear-gradient(135deg,${color},${color}cc)`, color: "#000", fontFamily: "'Dela Gothic One'", fontSize: 13, padding: "4px 11px", borderRadius: 20, whiteSpace: "nowrap" }}>★ {a.rating}</div>
         </div>
@@ -684,10 +686,20 @@ export default function App() {
   }, [showClock]);
 
   // ── Activity Verification ──
-  const [verified, setVerified] = useState({}); // { mapQuery: { status, rating, openH, closeH, ... } }
+  // Initialize from localStorage so permanently closed items are filtered immediately
+  const [verified, setVerified] = useState(() => {
+    try { const s = localStorage.getItem('hq_verified'); return s ? JSON.parse(s) : {}; } catch { return {}; }
+  });
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState(null);
   const verifiedLoc = useRef(null);
+
+  // Persist verified results so perm_closed survives page reloads
+  useEffect(() => {
+    if (Object.keys(verified).length > 0) {
+      try { localStorage.setItem('hq_verified', JSON.stringify(verified)); } catch {}
+    }
+  }, [verified]);
 
   useEffect(() => {
     if (!loc || verifiedLoc.current === loc) return;
