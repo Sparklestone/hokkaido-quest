@@ -151,7 +151,29 @@ export default async function handler(req, res) {
     results.allPassed = false;
   }
 
-  // ── 6. Upstash Redis ──
+  // ── 6. Google Geocoding API ──
+  try {
+    if (!GKEY) throw new Error("No API key");
+    // Reverse geocode Sapporo Station coordinates
+    const r = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=43.0687,141.3508&key=${GKEY}&language=en`
+    );
+    const d = await r.json();
+    if (d.error_message) throw new Error(d.error_message);
+    const addr = d.results?.[0]?.formatted_address;
+    results.checks.geocoding = {
+      name: "Google Geocoding API (My Location)",
+      status: addr ? "✅ Working" : "⚠️ No results",
+      testCoords: "43.0687, 141.3508 (Sapporo Station)",
+      resolvedAddress: addr || null,
+      passed: !!addr,
+    };
+  } catch (e) {
+    results.checks.geocoding = { name: "Google Geocoding API (My Location)", status: `❌ ${e.message}`, passed: false };
+    results.allPassed = false;
+  }
+
+  // ── 7. Upstash Redis ──
   try {
     if (!REDIS_URL || !REDIS_TOKEN) throw new Error("Not configured (optional)");
     const testKey = "healthcheck:ping";

@@ -123,6 +123,7 @@
         placesAutocomplete: `<div class="help"><strong>Fix:</strong> Same as Places Search — enable <strong>Places API (New)</strong> in Google Cloud Console. Autocomplete is part of the same API.</div>`,
         placesPhotos: `<div class="help"><strong>Fix:</strong> Photos require Places API (New) to be enabled. If Places Search works but Photos don't, check that your API key doesn't have HTTP referrer restrictions blocking server-side requests (Vercel functions have no referrer).</div>`,
         routes: `<div class="help"><strong>Fix:</strong> In Google Cloud Console → APIs & Services → Library, search for <strong>Routes API</strong> and click <strong>Enable</strong>. This is separate from the old Directions API.</div>`,
+        geocoding: `<div class="help"><strong>Fix:</strong> In Google Cloud Console → APIs & Services → Library, search for <strong>Geocoding API</strong> and click <strong>Enable</strong>. This powers the "Use My Location" button. Also make sure it's added to your API key's allowed APIs under Credentials → API restrictions.</div>`,
         redis: `<div class="help"><strong>Fix:</strong> Go to <a href="https://console.upstash.com" target="_blank" style="color: #FFE66D;">console.upstash.com</a>, create a free Redis database (region: Japan/Tokyo), then copy <code>UPSTASH_REDIS_REST_URL</code> and <code>UPSTASH_REDIS_REST_TOKEN</code> to Vercel env vars. This is optional — the app works without it, just slower.</div>`,
       };
       return hints[key] || '';
