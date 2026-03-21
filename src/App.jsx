@@ -653,7 +653,7 @@ export default function App() {
   const [noTime, setNoTime] = useState(false);
 
   // Reset to singles tab when noTime enabled (combos/extra unavailable)
-  useEffect(() => { if (noTime && tab !== "single") setTab("single"); }, [noTime]);
+  useEffect(() => { if (noTime && tab === "extra") setTab("single"); }, [noTime]);
 
   // Scroll to top on screen change — aggressive iOS Safari fix
   const topRef = useRef(null);
@@ -783,24 +783,40 @@ export default function App() {
   }, [loc, time, cats, free, dep, mult, noTime, mergeVerified]);
 
   const combos = useMemo(() => {
-    if (!loc || noTime) return [];
+    if (!loc || filtered.length < 2) return [];
     const r = [];
-    for (let i = 0; i < Math.min(filtered.length, 15); i++) {
-      const a1 = filtered[i], adj1 = Math.round(a1.travelMin * mult);
-      const s1 = dep + adj1 / 60, e1 = s1 + a1.activityMin / 60;
-      for (let j = 0; j < Math.min(filtered.length, 15); j++) {
-        if (j === i) continue;
-        const a2 = filtered[j], adj2 = Math.round(a2.travelMin * mult);
-        const tb = Math.max(5, Math.round((adj1 + adj2) / 2));
-        const s2 = e1 + tb / 60, e2 = s2 + a2.activityMin / 60;
-        const tot = Math.round((e2 + adj2 / 60 - dep) * 60);
-        if (tot > time || !isOp(a2, s2)) continue;
-        r.push({ acts: [a1, a2], travs: [tb], tot, avg: +((a1.rating + a2.rating) / 2).toFixed(1), uc: new Set([a1.cat, a2.cat]).size });
+
+    if (noTime) {
+      // No-timing mode: pair by proximity + category diversity + rating
+      for (let i = 0; i < Math.min(filtered.length, 20); i++) {
+        const a1 = filtered[i], adj1 = Math.round(a1.travelMin * mult);
+        for (let j = i + 1; j < Math.min(filtered.length, 20); j++) {
+          const a2 = filtered[j], adj2 = Math.round(a2.travelMin * mult);
+          const tb = Math.max(5, Math.round((adj1 + adj2) / 2)); // estimated travel between
+          const tot = adj1 + a1.activityMin + tb + a2.activityMin + adj2;
+          r.push({ acts: [a1, a2], travs: [tb], tot, avg: +((a1.rating + a2.rating) / 2).toFixed(1), uc: new Set([a1.cat, a2.cat]).size });
+        }
+      }
+    } else {
+      // Timed mode: respect departure time and budget
+      for (let i = 0; i < Math.min(filtered.length, 15); i++) {
+        const a1 = filtered[i], adj1 = Math.round(a1.travelMin * mult);
+        const s1 = dep + adj1 / 60, e1 = s1 + a1.activityMin / 60;
+        for (let j = 0; j < Math.min(filtered.length, 15); j++) {
+          if (j === i) continue;
+          const a2 = filtered[j], adj2 = Math.round(a2.travelMin * mult);
+          const tb = Math.max(5, Math.round((adj1 + adj2) / 2));
+          const s2 = e1 + tb / 60, e2 = s2 + a2.activityMin / 60;
+          const tot = Math.round((e2 + adj2 / 60 - dep) * 60);
+          if (tot > time || !isOp(a2, s2)) continue;
+          r.push({ acts: [a1, a2], travs: [tb], tot, avg: +((a1.rating + a2.rating) / 2).toFixed(1), uc: new Set([a1.cat, a2.cat]).size });
+        }
       }
     }
+
     const seen = new Set();
     return r.map(c => ({ ...c, sc: c.avg * 10 + c.uc * 5 - c.tot * 0.02, k: c.acts.map(a => a.name).sort().join("|") })).filter(c => { if (seen.has(c.k)) return false; seen.add(c.k); return true; }).sort((a, b) => b.sc - a.sc).slice(0, 12);
-  }, [filtered, dep, time, loc, mult]);
+  }, [filtered, dep, time, loc, mult, noTime]);
 
   return (
     <div style={{ minHeight: "100vh", background: L ? L.bg : "linear-gradient(135deg,#0a0a1a 0%,#1a0a2e 50%,#0a1628 100%)", color: "#fff", position: "relative", transition: "background 0.6s" }}>
@@ -956,7 +972,7 @@ export default function App() {
           })()}
           {verifyError && <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "8px 14px", marginBottom: 14, fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>ℹ️ {verifyError}</div>}
           <div style={{ display: "flex", background: "rgba(255,255,255,0.04)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", marginBottom: 20, overflow: "hidden", position: "relative", zIndex: 2 }}>
-            {[{ k: "single", l: `🎯 All (${filtered.length})`, show: true }, { k: "combo", l: `⛓️ Combos (${combos.length})`, show: !noTime }, { k: "extra", l: `⏳ Extra (${extra.length})`, show: !noTime }].filter(t => t.show).map(t => (
+            {[{ k: "single", l: `🎯 All (${filtered.length})`, show: true }, { k: "combo", l: `⛓️ Combos (${combos.length})`, show: true }, { k: "extra", l: `⏳ Extra (${extra.length})`, show: !noTime }].filter(t => t.show).map(t => (
               <button key={t.k} onClick={() => { setTab(t.k); setExpC(null); }} style={{ flex: 1, padding: "12px 10px", cursor: "pointer", border: "none", background: tab === t.k ? `${L.color}20` : "transparent", color: tab === t.k ? L.color : "rgba(255,255,255,0.45)", fontFamily: "'Dela Gothic One'", fontSize: 12, borderBottom: tab === t.k ? `2px solid ${L.color}` : "2px solid transparent" }}>{t.l}</button>
             ))}
           </div>
@@ -1008,6 +1024,7 @@ export default function App() {
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: -6 }}><ShareBtn activities={combos.flatMap(c => c.acts)} title={`${combos.length} Combos`} locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All Combos" /></div>
             {combos.map((c, ci) => {
               const isE = expC === ci;
+              // Build timeline (used only in timed mode)
               let t = dep;
               const tl = [];
               c.acts.forEach((a, ai) => { const adj = Math.round(a.travelMin * mult); t += adj / 60; const ar = t; t += a.activityMin / 60; const dn = t; if (ai < c.travs.length) t += c.travs[ai] / 60; tl.push({ a, ar, dn }); });
@@ -1024,16 +1041,44 @@ export default function App() {
                       <div style={{ background: `linear-gradient(135deg,${L.color},${L.color}cc)`, color: "#000", fontFamily: "'Dela Gothic One'", fontSize: 13, padding: "4px 11px", borderRadius: 20, height: "fit-content" }}>★ {c.avg}</div>
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                      <div style={{ background: `${L.color}20`, borderRadius: 8, padding: "5px 12px", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>⌛ {fmtD(c.tot)}</div>
+                      <div style={{ background: `${L.color}20`, borderRadius: 8, padding: "5px 12px", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>⌛ ~{fmtD(c.tot)} total</div>
                       <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "5px 12px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.55)" }}>{c.acts.length} stops</div>
+                      {noTime && c.acts.some(a => a.cat !== c.acts[0].cat) && <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "5px 12px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.4)" }}>🎯 Mix</div>}
                       <span style={{ marginLeft: "auto", color: L.color, fontSize: 13, transform: isE ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.3s", display: "inline-block" }}>▶</span>
                     </div>
                   </button>
                   {isE && <div style={{ padding: "0 22px 22px", animation: "fu 0.3s both" }}>
                     <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "16px 18px", marginBottom: 16, borderLeft: `3px solid ${L.color}40` }}>
-                      <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.35)", letterSpacing: 2, marginBottom: 12 }}>TIMELINE</div>
-                      {tl.map((s, si) => (<div key={si} style={{ marginBottom: si < tl.length - 1 ? 14 : 0 }}><div style={{ display: "flex", gap: 10 }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>{fmt(Math.floor(s.ar), Math.round((s.ar % 1) * 60))}</div><div style={{ width: 8, height: 8, borderRadius: "50%", background: L.color, flexShrink: 0, marginTop: 4, boxShadow: `0 0 8px ${L.color}60` }} /><div><div style={{ fontFamily: "'Dela Gothic One'", fontSize: 15 }}>{s.a.name}<CopyBtn text={s.a.name} color={L.color} /></div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{s.a.activityMin}min · {s.a.cost}</div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: L.color, opacity: 0.7, fontStyle: "italic", marginTop: 4 }}>💡 {s.a.tip}</div></div></div>{si < tl.length - 1 && <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{fmt(Math.floor(s.dn), Math.round((s.dn % 1) * 60))}</div><div style={{ width: 8, display: "flex", justifyContent: "center", flexShrink: 0 }}><div style={{ width: 1, height: 18, background: `${L.color}30` }} /></div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} {c.travs[si]}min</div></div>}</div>))}
-                      <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>{fmt(Math.floor(ret), Math.round((ret % 1) * 60))}</div><div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.3)", flexShrink: 0 }} /><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.55)" }}>🏠 Back</div></div>
+                      <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.35)", letterSpacing: 2, marginBottom: 12 }}>{noTime ? "ITINERARY" : "TIMELINE"}</div>
+                      {noTime ? (
+                        /* ─── NoTime mode: simplified flow ─── */
+                        c.acts.map((a, si) => (
+                          <div key={si} style={{ marginBottom: si < c.acts.length - 1 ? 14 : 0 }}>
+                            <div style={{ display: "flex", gap: 10 }}>
+                              <div style={{ width: 30, flexShrink: 0, textAlign: "right", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>{si + 1}.</div>
+                              <div style={{ width: 8, height: 8, borderRadius: "50%", background: L.color, flexShrink: 0, marginTop: 5, boxShadow: `0 0 8px ${L.color}60` }} />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 15 }}>{a.name}<CopyBtn text={a.name} color={L.color} /></div>
+                                <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{a.activityMin}min · {a.cost} · {tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} {Math.round(a.travelMin * mult)}min from base</div>
+                                <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: L.color, opacity: 0.7, fontStyle: "italic", marginTop: 4 }}>💡 {a.tip}</div>
+                              </div>
+                            </div>
+                            {si < c.acts.length - 1 && (
+                              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+                                <div style={{ width: 30, flexShrink: 0 }} />
+                                <div style={{ width: 8, display: "flex", justifyContent: "center", flexShrink: 0 }}><div style={{ width: 1, height: 18, background: `${L.color}30` }} /></div>
+                                <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} ~{c.travs[si]}min between stops</div>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        /* ─── Timed mode: full timeline with clock ─── */
+                        <>
+                          {tl.map((s, si) => (<div key={si} style={{ marginBottom: si < tl.length - 1 ? 14 : 0 }}><div style={{ display: "flex", gap: 10 }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>{fmt(Math.floor(s.ar), Math.round((s.ar % 1) * 60))}</div><div style={{ width: 8, height: 8, borderRadius: "50%", background: L.color, flexShrink: 0, marginTop: 4, boxShadow: `0 0 8px ${L.color}60` }} /><div><div style={{ fontFamily: "'Dela Gothic One'", fontSize: 15 }}>{s.a.name}<CopyBtn text={s.a.name} color={L.color} /></div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{s.a.activityMin}min · {s.a.cost}</div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: L.color, opacity: 0.7, fontStyle: "italic", marginTop: 4 }}>💡 {s.a.tip}</div></div></div>{si < tl.length - 1 && <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{fmt(Math.floor(s.dn), Math.round((s.dn % 1) * 60))}</div><div style={{ width: 8, display: "flex", justifyContent: "center", flexShrink: 0 }}><div style={{ width: 1, height: 18, background: `${L.color}30` }} /></div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} {c.travs[si]}min</div></div>}</div>))}
+                          <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>{fmt(Math.floor(ret), Math.round((ret % 1) * 60))}</div><div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.3)", flexShrink: 0 }} /><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.55)" }}>🏠 Back</div></div>
+                        </>
+                      )}
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {c.acts.map((a, ai) => <a key={ai} href={`https://www.google.com/maps/search/?api=1&query=${a.mapQuery}`} target="_blank" rel="noopener noreferrer" style={{ background: `${L.color}15`, border: `1px solid ${L.color}30`, borderRadius: 8, padding: "6px 12px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: L.color, textDecoration: "none" }}>📍 {a.name}</a>)}
@@ -1043,7 +1088,7 @@ export default function App() {
                 </div>
               );
             })}
-          </div> : <Emp msg="No combos fit — try more time or broader filters." />)}
+          </div> : <Emp msg={noTime ? "Select at least 2 categories to see combos." : "No combos fit — try more time or broader filters."} />)}
 
           <div style={{ height: 40 }} />
         </div>}
