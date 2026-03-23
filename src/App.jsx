@@ -423,12 +423,12 @@ const KNOWN_COORDS = {
   "Rusutsu+Snowmobile+Tour":[42.7570,140.5600],"Rusutsu+Snow+Rafting":[42.7565,140.5595],
   "Rusutsu+Snow+Tubing":[42.7560,140.5590],"Rusutsu+Snowshoe+Trek":[42.7575,140.5520],
   "Rusutsu+Shrine+Hokkaido":[42.7555,140.5510],
-  // ─── KIMOBETSU (travelMin 10, town is ~10km NE of Rusutsu at 42.79, 140.37) ───
-  "TAKiBi+Kimobetsu":[42.7920,140.3700],"Kikoz+Kimobetsu":[42.7905,140.3680],
-  "Potato+Inn+Papa+Kimobetsu":[42.7915,140.3720],"Kimobetsu+Izakaya":[42.7910,140.3710],
-  "Kimobetsu+Art+Studio":[42.7925,140.3690],
+  // ─── KIMOBETSU (travelMin 10, town is ~15km E of Rusutsu along Rt230 at 42.80, 140.93) ───
+  "TAKiBi+Kimobetsu":[42.7978,140.9280],"Kikoz+Kimobetsu":[42.7965,140.9260],
+  "Potato+Inn+Papa+Kimobetsu":[42.7970,140.9300],"Kimobetsu+Izakaya":[42.7975,140.9290],
+  "Kimobetsu+Art+Studio":[42.7985,140.9270],
   // ─── RUSUTSU FARTHER (travelMin 10-15) ───
-  "Michi+no+Eki+230+Rusutsu":[42.7580,140.5330],
+  "Michi+no+Eki+230+Rusutsu":[42.7580,140.5580],
   // ─── LAKE TOYA (travelMin 30) ───
   "Lake+Toya+Hokkaido":[42.596,140.856],"Lake+Toya+Cafe":[42.5920,140.8500],
   "Lake+Toya+Fireworks":[42.5960,140.8520],"Lake+Toya+Glass+Art":[42.5900,140.8480],
@@ -436,7 +436,7 @@ const KNOWN_COORDS = {
   "Toya+Sun+Palace+Onsen":[42.5830,140.8420],"Toyako+Visitor+Center":[42.5950,140.8500],
   "Usuzan+Ropeway":[42.534,140.844],
   // ─── OTHER RUSUTSU DESTINATIONS ───
-  "Noboribetsu+Jigokudani":[42.495,141.138],"Kyogoku+Spring+Water+Village":[42.864,140.513],
+  "Noboribetsu+Jigokudani":[42.495,141.138],"Kyogoku+Spring+Water+Village":[42.8637,140.8570],
   "Upopoy+Shiraoi":[42.554,141.354],"Upopoy+Ainu+Museum+Shiraoi":[42.554,141.354],
   // ─── NISEKO HIRAFU ───
   "Hirafu+Niseko":[42.863,140.699],"Hirafu+Main+Street+Niseko":[42.8628,140.6985],
