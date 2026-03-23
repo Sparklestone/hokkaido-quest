@@ -396,10 +396,35 @@ const travelMult = (mode) => mode === "walking" ? 4 : mode === "bus" ? 1.5 : 1;
 
 // ─── DATA ───
 const LOCATIONS = {
-  rusutsu: { name: "Rusutsu", nameJp: "ルスツ", color: "#4ECDC4", accent: "#1A535C", bg: "linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%)", info: "Rusutsu is Hokkaido's best-kept secret — a massive resort with virtually no lift lines, surrounded by pristine volcanic landscapes. Unlike international Niseko or urban Sapporo, Rusutsu offers a deeply Japanese ski experience. Its proximity to Lake Toya and Noboribetsu makes it a gateway to dramatic natural scenery." },
-  niseko: { name: "Niseko", nameJp: "ニセコ", color: "#FF6B6B", accent: "#C73E3E", bg: "linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)", info: "Niseko is Japan's most famous international ski destination, legendary for impossibly light powder and the iconic Mt. Yotei backdrop. Vibrant après-ski culture — craft breweries, whisky bars, farm-to-table dining. The most versatile base for non-skiers with dog sledding, snowshoeing, and glassblowing." },
-  sapporo: { name: "Sapporo", nameJp: "札幌", color: "#FFE66D", accent: "#F4A261", bg: "linear-gradient(135deg,#0c0c1d 0%,#1a1a3e 50%,#2d1b69 100%)", info: "Sapporo is Hokkaido's capital — a proper metropolis with world-class food, nightlife, and culture. Famous for miso ramen, Genghis Khan BBQ, the Snow Festival, and Sapporo beer. Depth you can't find in resort towns: Ainu museums, Noguchi sculpture parks, hidden coffee shops, and Japan's best bar district." },
+  rusutsu: { name: "Rusutsu", nameJp: "ルスツ", color: "#4ECDC4", accent: "#1A535C", bg: "linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%)", info: "Rusutsu is Hokkaido's best-kept secret — a massive resort with virtually no lift lines, surrounded by pristine volcanic landscapes. Unlike international Niseko or urban Sapporo, Rusutsu offers a deeply Japanese ski experience. Its proximity to Lake Toya and Noboribetsu makes it a gateway to dramatic natural scenery.", lat: 42.7521, lng: 140.2364 },
+  niseko: { name: "Niseko", nameJp: "ニセコ", color: "#FF6B6B", accent: "#C73E3E", bg: "linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)", info: "Niseko is Japan's most famous international ski destination, legendary for impossibly light powder and the iconic Mt. Yotei backdrop. Vibrant après-ski culture — craft breweries, whisky bars, farm-to-table dining. The most versatile base for non-skiers with dog sledding, snowshoeing, and glassblowing.", lat: 42.8625, lng: 140.6880 },
+  sapporo: { name: "Sapporo", nameJp: "札幌", color: "#FFE66D", accent: "#F4A261", bg: "linear-gradient(135deg,#0c0c1d 0%,#1a1a3e 50%,#2d1b69 100%)", info: "Sapporo is Hokkaido's capital — a proper metropolis with world-class food, nightlife, and culture. Famous for miso ramen, Genghis Khan BBQ, the Snow Festival, and Sapporo beer. Depth you can't find in resort towns: Ainu museums, Noguchi sculpture parks, hidden coffee shops, and Japan's best bar district.", lat: 43.0621, lng: 141.3544 },
 };
+
+// Known landmark coordinates for map accuracy
+const KNOWN_COORDS = {
+  "Lake+Toya+Hokkaido":[42.596,140.856],"Usuzan+Ropeway":[42.534,140.844],"Noboribetsu+Jigokudani":[42.495,141.138],
+  "Kyogoku+Spring+Water+Village":[42.864,140.513],"Upopoy+Shiraoi":[42.554,141.354],"Nikka+Whisky+Yoichi+Distillery":[43.173,140.773],
+  "Hoheikyo+Onsen+Sapporo":[42.960,141.180],"Sapporo+TV+Tower":[43.061,141.357],"Nijo+Market+Sapporo":[43.061,141.347],
+  "Odori+Park+Sapporo":[43.059,141.356],"Tanukikoji+Shopping+Street+Sapporo":[43.058,141.349],"Susukino+Sapporo":[43.054,141.353],
+  "Shiroi+Koibito+Park+Sapporo":[43.076,141.276],"Moerenuma+Park+Sapporo":[43.112,141.407],"Maruyama+Park+Sapporo":[43.053,141.310],
+  "Jozankei+Onsen+Sapporo":[42.969,141.157],"Lake+Shikotsu+Ice+Festival":[42.779,141.325],"Asahiyama+Memorial+Park+Sapporo":[43.044,141.354],
+  "Sapporo+Ramen+Yokocho":[43.055,141.354],"Sapporo+Beer+Museum":[43.071,141.362],"Sapporo+Snow+Festival":[43.059,141.356],
+  "Hirafu+Niseko":[42.863,140.699],"Niseko+Village":[42.858,140.665],"Annupuri+Niseko":[42.860,140.641],
+  "Hanazono+Niseko":[42.882,140.719],
+};
+
+// Compute approximate map coordinates from travelMin and name hash
+function getCoords(a, locData) {
+  if (KNOWN_COORDS[a.mapQuery]) return KNOWN_COORDS[a.mapQuery];
+  // Use name as seed for consistent direction
+  let hash = 0;
+  for (let i = 0; i < a.name.length; i++) hash = ((hash << 5) - hash + a.name.charCodeAt(i)) | 0;
+  const angle = (Math.abs(hash) % 360) * Math.PI / 180;
+  // ~0.008 degrees per minute of driving ≈ 0.8km/min
+  const dist = a.travelMin * 0.003;
+  return [locData.lat + dist * Math.cos(angle), locData.lng + dist * Math.sin(angle) * 1.3];
+}
 
 const CATEGORIES = [
   { id: "mustsee", label: "Must See", emoji: "⭐", labelJp: "必見" },
@@ -619,7 +644,7 @@ const isOp = (a, ar) => ar >= a.openH && (ar + a.activityMin / 60) <= a.closeH +
 const Petals = () => (<div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 1, overflow: "hidden" }}>{Array.from({ length: 12 }, (_, i) => (<div key={i} style={{ position: "absolute", left: `${(i * 8.5) % 100}%`, top: -20, width: 8 + (i % 4) * 2, height: (8 + (i % 4) * 2) * 0.7, background: "radial-gradient(ellipse,rgba(255,183,197,0.65),rgba(255,140,160,0.2))", borderRadius: "50% 0 50% 50%", animation: `pf ${7 + (i % 4) * 2}s ${(i * 0.6) % 7}s linear infinite`, filter: "blur(0.5px)" }} />))}</div>);
 
 // ─── CARD ───
-const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
+const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest, mapLetter }) => {
   const mult = travelMult(tMode);
   const adjTravel = Math.round(a.travelMin * mult);
   const tot = adjTravel * 2 + a.activityMin;
@@ -653,11 +678,11 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
   const hasHours = hoursLines.length > 0;
 
   return (
-    <div style={{ background: v?.status === 'temp_closed' ? "rgba(255,100,50,0.06)" : "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", border: `1px solid ${v?.status === 'temp_closed' ? 'rgba(255,100,50,0.2)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 16, padding: "20px 22px", animation: `si 0.5s ${i * 0.07}s both cubic-bezier(0.22,1,0.36,1)`, position: "relative", overflow: "hidden", transition: "border-color 0.3s" }} onMouseEnter={e => e.currentTarget.style.borderColor = color + "44"} onMouseLeave={e => e.currentTarget.style.borderColor = v?.status === 'temp_closed' ? "rgba(255,100,50,0.2)" : "rgba(255,255,255,0.08)"}>
+    <div data-activity={a.name} style={{ background: v?.status === 'temp_closed' ? "rgba(255,100,50,0.06)" : "rgba(255,255,255,0.04)", backdropFilter: "blur(12px)", border: `1px solid ${v?.status === 'temp_closed' ? 'rgba(255,100,50,0.2)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 16, padding: "20px 22px", animation: `si 0.5s ${i * 0.07}s both cubic-bezier(0.22,1,0.36,1)`, position: "relative", overflow: "hidden", transition: "border-color 0.3s" }} onMouseEnter={e => e.currentTarget.style.borderColor = color + "44"} onMouseLeave={e => e.currentTarget.style.borderColor = v?.status === 'temp_closed' ? "rgba(255,100,50,0.2)" : "rgba(255,255,255,0.08)"}>
       {v?.status === 'temp_closed' && <div style={{ background: "rgba(255,100,50,0.15)", border: "1px solid rgba(255,100,50,0.3)", borderRadius: 10, padding: "8px 14px", marginBottom: 14, fontFamily: "'Dela Gothic One'", fontSize: 13, color: "#ff8844", display: "flex", alignItems: "center", gap: 6 }}>⚠️ Temporarily Closed — verify before visiting</div>}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 4 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 19, color: "#fff", marginBottom: 2 }}>{a.name}<CopyBtn text={a.name} color={color} /><WebBtn query={a.name + ' ' + (a.nameJp || '') + ' Hokkaido'} color={color} /><InstaBtn query={a.nameJp || a.name} color={color} /></div>
+          <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 19, color: "#fff", marginBottom: 2 }}>{mapLetter && <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", background: "#1a1030", border: `2px solid ${color}`, fontFamily: "'Dela Gothic One'", fontSize: 12, color, marginRight: 8, verticalAlign: "middle", flexShrink: 0 }}>{mapLetter}</span>}{a.name}<CopyBtn text={a.name} color={color} /><WebBtn query={a.name + ' ' + (a.nameJp || '') + ' Hokkaido'} color={color} /><InstaBtn query={a.nameJp || a.name} color={color} /></div>
           <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: color, opacity: 0.8, letterSpacing: 1 }}>{a.nameJp}<CopyBtn text={a.nameJp} color={color} /></div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "auto auto", gap: 5, flexShrink: 0, justifyItems: "end" }}>
@@ -703,6 +728,96 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
   );
 };
 
+// ─── MAP CARD ───
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const MapCard = ({ activities, locData, color, onClose, onSelect }) => {
+  const mapRef = useRef(null);
+  const leafletMap = useRef(null);
+
+  useEffect(() => {
+    if (!mapRef.current || !locData) return;
+    // Load Leaflet CSS
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+    // Load Leaflet JS
+    const initMap = () => {
+      const L = window.L;
+      if (!L || leafletMap.current) return;
+      const map = L.map(mapRef.current, { zoomControl: false, attributionControl: false }).setView([locData.lat, locData.lng], 11);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+      L.control.zoom({ position: 'bottomleft' }).addTo(map);
+      L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map).addAttribution('© OpenStreetMap');
+
+      // Base marker
+      const baseIcon = L.divIcon({ className: '', html: `<div style="width:28px;height:28px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:14px">🏠</div>`, iconSize: [28, 28], iconAnchor: [14, 14] });
+      L.marker([locData.lat, locData.lng], { icon: baseIcon }).addTo(map).bindPopup(`<b>${locData.name} Base</b>`);
+
+      // Activity markers
+      const bounds = [[locData.lat, locData.lng]];
+      activities.forEach((a, i) => {
+        const [lat, lng] = getCoords(a, locData);
+        bounds.push([lat, lng]);
+        const letter = i < 26 ? LETTERS[i] : `${i + 1}`;
+        const cat = CATEGORIES.find(c => c.id === a.cat);
+        const icon = L.divIcon({ className: '', html: `<div style="width:26px;height:26px;border-radius:50%;background:#1a1030;border:2px solid ${color};box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-family:'Dela Gothic One',sans-serif;font-size:11px;font-weight:700;color:${color}">${letter}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] });
+        const marker = L.marker([lat, lng], { icon }).addTo(map);
+        marker.bindPopup(`<div style="font-family:sans-serif;min-width:140px"><b>${letter}. ${a.name}</b><br><span style="font-size:12px;color:#666">${a.nameJp}</span><br><span style="font-size:12px">★ ${a.rating} · ${cat ? cat.emoji : ''} ${cat ? cat.label : ''}</span><br><span style="font-size:12px;color:#888">${a.travelMin}min travel · ${a.activityMin}min activity</span></div>`);
+        marker.on('click', () => { if (onSelect) onSelect(a.name); });
+      });
+      if (bounds.length > 1) map.fitBounds(bounds, { padding: [30, 30] });
+      leafletMap.current = map;
+    };
+
+    if (window.L) { initMap(); }
+    else {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.onload = () => setTimeout(initMap, 50);
+      document.head.appendChild(script);
+    }
+
+    return () => { if (leafletMap.current) { leafletMap.current.remove(); leafletMap.current = null; } };
+  }, [activities, locData]);
+
+  const recenter = () => {
+    if (!leafletMap.current || !locData) return;
+    const bounds = [[locData.lat, locData.lng]];
+    activities.forEach(a => { bounds.push(getCoords(a, locData)); });
+    leafletMap.current.fitBounds(bounds, { padding: [30, 30] });
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "fu 0.3s both" }} onClick={onClose}>
+      <div style={{ width: "100%", maxWidth: 600, maxHeight: "80vh", background: "#0e0e22", border: `1px solid ${color}40`, borderRadius: 20, overflow: "hidden", position: "relative", boxShadow: `0 8px 40px ${color}20` }} onClick={e => e.stopPropagation()}>
+        <div style={{ padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${color}20` }}>
+          <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 14, color }}>🗺 {activities.length} Activities</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={recenter} style={{ background: `${color}20`, border: `1px solid ${color}40`, borderRadius: 8, padding: "5px 12px", cursor: "pointer", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color }}>⊕ Recenter</button>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, width: 32, height: 32, cursor: "pointer", color: "#fff", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>✕</button>
+          </div>
+        </div>
+        <div ref={mapRef} style={{ width: "100%", height: "min(60vh, 450px)" }} />
+        <div style={{ padding: "10px 18px", maxHeight: 120, overflow: "auto", borderTop: `1px solid ${color}20` }}>
+          {activities.slice(0, 26).map((a, i) => (
+            <button key={a.name} onClick={() => { onClose(); setTimeout(() => onSelect && onSelect(a.name), 100); }} style={{ display: "inline-block", background: `${color}10`, border: `1px solid ${color}25`, borderRadius: 6, padding: "3px 8px", margin: "2px 4px 2px 0", cursor: "pointer", fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "rgba(255,255,255,0.6)" }}>
+              <span style={{ fontFamily: "'Dela Gothic One'", color, marginRight: 4 }}>{LETTERS[i]}</span>{a.name}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MapBtn = ({ onClick, color }) => (
+  <button onClick={onClick} style={{ background: `${color}15`, border: `1px solid ${color}30`, borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 12, color, fontFamily: "'Dela Gothic One'", transition: "all 0.2s", display: "inline-flex", alignItems: "center", gap: 5 }}>🗺 Map</button>
+);
+
 // ─── MAIN ───
 export default function App() {
   const [loc, setLoc] = useState(null);
@@ -741,6 +856,11 @@ export default function App() {
 
   // Header clock toggle
   const [showClock, setShowClock] = useState(false);
+  const [mapActivities, setMapActivities] = useState(null); // array of activities to show on map, or null
+  const scrollToActivity = useCallback((name) => {
+    const el = document.querySelector(`[data-activity="${CSS.escape(name)}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
   const [clockStr, setClockStr] = useState("");
   useEffect(() => {
     if (!showClock) return;
@@ -892,6 +1012,9 @@ export default function App() {
       <div ref={topRef} style={{ position: "absolute", top: 0, left: 0, height: 1, width: 1 }} />
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');@keyframes pf{0%{transform:translateY(-20px) rotate(0) translateX(0);opacity:0}10%{opacity:1}90%{opacity:.6}100%{transform:translateY(100vh) rotate(360deg) translateX(60px);opacity:0}}@keyframes si{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes fu{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes bi{0%{transform:translateX(-50%) scale(.3);opacity:0}50%{transform:translateX(-50%) scale(1.05)}100%{transform:translateX(-50%) scale(1);opacity:1}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}input[type="range"]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;outline:none;background:rgba(255,255,255,.1)}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:${L ? L.color : "#FFE66D"};cursor:pointer;box-shadow:0 0 12px ${L ? L.color + "88" : "#FFE66D88"}}*{box-sizing:border-box}a{color:inherit}select{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-family:'Zen Kaku Gothic New';font-size:14px;outline:none;cursor:pointer}select option{background:#1a1a2e;color:#fff}`}</style>
       <Petals />
+
+      {/* MAP OVERLAY */}
+      {mapActivities && L && <MapCard activities={mapActivities} locData={LOCATIONS[loc]} color={L.color} onClose={() => setMapActivities(null)} onSelect={scrollToActivity} />}
 
       {/* HEADER */}
       <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,10,26,0.75)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -1062,35 +1185,38 @@ export default function App() {
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
                 <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 16, color: "#ff8888", display: "flex", alignItems: "center", gap: 6 }}>🔥 Most Popular</div>
                 <div style={{ flex: 1, height: 1, background: "rgba(255,100,100,0.15)" }} />
+                <MapBtn onClick={() => setMapActivities(grouped.popular)} color={L.color} />
                 <ShareBtn activities={grouped.popular} title="Most Popular" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} />
                 <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{grouped.popular.length}</div>
               </div>
-              {grouped.popular.map((a, i) => <Cd key={a.name} a={a} color={L.color} i={i} dH={dH} dM={dM} tMode={tMode} noTime={noTime} />)}
+              {grouped.popular.map((a, i) => <Cd key={a.name} a={a} color={L.color} i={i} dH={dH} dM={dM} tMode={tMode} noTime={noTime} mapLetter={mapActivities && mapActivities.includes(a) ? LETTERS[mapActivities.indexOf(a)] : null} />)}
             </>}
             {grouped.closest.length > 0 && <>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
                 <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 16, color: L.color, display: "flex", alignItems: "center", gap: 6 }}>📍 Closest to You</div>
                 <div style={{ flex: 1, height: 1, background: `${L.color}20` }} />
+                <MapBtn onClick={() => setMapActivities(grouped.closest)} color={L.color} />
                 <ShareBtn activities={grouped.closest} title="Closest Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} />
                 <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{grouped.closest.length}</div>
               </div>
-              {grouped.closest.map((a, i) => <Cd key={a.name} a={a} color={L.color} i={i + grouped.popular.length} dH={dH} dM={dM} tMode={tMode} noTime={noTime} isClosest={true} />)}
+              {grouped.closest.map((a, i) => <Cd key={a.name} a={a} color={L.color} i={i + grouped.popular.length} dH={dH} dM={dM} tMode={tMode} noTime={noTime} isClosest={true} mapLetter={mapActivities && mapActivities.includes(a) ? LETTERS[mapActivities.indexOf(a)] : null} />)}
             </>}
             {grouped.rest.length > 0 && <>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
                 <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 16, color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", gap: 6 }}>🗾 More Activities</div>
                 <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                <MapBtn onClick={() => setMapActivities(grouped.rest)} color={L.color} />
                 <ShareBtn activities={grouped.rest} title="More Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} />
                 <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{grouped.rest.length}</div>
               </div>
-              {grouped.rest.map((a, i) => <Cd key={a.name} a={a} color={L.color} i={i + grouped.popular.length + grouped.closest.length} dH={dH} dM={dM} tMode={tMode} noTime={noTime} />)}
+              {grouped.rest.map((a, i) => <Cd key={a.name} a={a} color={L.color} i={i + grouped.popular.length + grouped.closest.length} dH={dH} dM={dM} tMode={tMode} noTime={noTime} mapLetter={mapActivities && mapActivities.includes(a) ? LETTERS[mapActivities.indexOf(a)] : null} />)}
             </>}
           </div> : <Emp />)}
 
-          {tab === "extra" && !noTime && (extra.length > 0 ? <div style={{ position: "relative", zIndex: 2 }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><div style={{ background: `${L.color}08`, border: `1px solid ${L.color}20`, borderRadius: 12, padding: "12px 16px", flex: 1, fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>These match your vibe but need more than <strong style={{ color: L.color }}>{fmtD(time)}</strong>. Plan for a longer break.</div><div style={{ marginLeft: 10, flexShrink: 0 }}><ShareBtn activities={extra} title="Extra Time Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} /></div></div><div style={{ display: "flex", flexDirection: "column", gap: 16 }}>{extra.map((a, i) => { const adj = Math.round(a.travelMin * mult); const ov = (adj * 2 + a.activityMin) - time; return (<div key={a.name} style={{ position: "relative" }}><div style={{ position: "absolute", top: 14, left: 14, zIndex: 6, background: "linear-gradient(135deg,#ff4444,#cc0000)", borderRadius: 8, padding: "4px 10px", fontFamily: "'Dela Gothic One'", fontSize: 12, color: "#fff" }}>+{fmtD(ov)} over</div><Cd a={a} color={L.color} i={i} dH={dH} dM={dM} tMode={tMode} noTime={false} /></div>); })}</div></div> : <Emp msg="All matching activities fit — nice!" />)}
+          {tab === "extra" && !noTime && (extra.length > 0 ? <div style={{ position: "relative", zIndex: 2 }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><div style={{ background: `${L.color}08`, border: `1px solid ${L.color}20`, borderRadius: 12, padding: "12px 16px", flex: 1, fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>These match your vibe but need more than <strong style={{ color: L.color }}>{fmtD(time)}</strong>. Plan for a longer break.</div><div style={{ marginLeft: 10, flexShrink: 0, display: "flex", gap: 8 }}><MapBtn onClick={() => setMapActivities(extra)} color={L.color} /><ShareBtn activities={extra} title="Extra Time Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} /></div></div><div style={{ display: "flex", flexDirection: "column", gap: 16 }}>{extra.map((a, i) => { const adj = Math.round(a.travelMin * mult); const ov = (adj * 2 + a.activityMin) - time; return (<div key={a.name} style={{ position: "relative" }}><div style={{ position: "absolute", top: 14, left: 14, zIndex: 6, background: "linear-gradient(135deg,#ff4444,#cc0000)", borderRadius: 8, padding: "4px 10px", fontFamily: "'Dela Gothic One'", fontSize: 12, color: "#fff" }}>+{fmtD(ov)} over</div><Cd a={a} color={L.color} i={i} dH={dH} dM={dM} tMode={tMode} noTime={false} mapLetter={mapActivities && mapActivities.includes(a) ? LETTERS[mapActivities.indexOf(a)] : null} /></div>); })}</div></div> : <Emp msg="All matching activities fit — nice!" />)}
 
           {tab === "combo" && (combos.length > 0 ? <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "relative", zIndex: 2 }}>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: -6 }}><ShareBtn activities={combos.flatMap(c => c.acts)} title={`${combos.length} Combos`} locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All Combos" dH={dH} dM={dM} noTime={noTime} mult={mult} /></div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: -6 }}><MapBtn onClick={() => { const unique = []; const seen = new Set(); combos.forEach(c => c.acts.forEach(a => { if (!seen.has(a.name)) { seen.add(a.name); unique.push(a); } })); setMapActivities(unique); }} color={L.color} /><ShareBtn activities={combos.flatMap(c => c.acts)} title={`${combos.length} Combos`} locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All Combos" dH={dH} dM={dM} noTime={noTime} mult={mult} /></div>
             {combos.map((c, ci) => {
               const isE = expC === ci;
               // Build timeline (used only in timed mode)
