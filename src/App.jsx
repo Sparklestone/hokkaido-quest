@@ -4,26 +4,62 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 const CopyBtn = ({ text, color }) => {
   const [copied, setCopied] = useState(false);
   const copy = (e) => { e.stopPropagation(); navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); };
-  return (<button onClick={copy} title="Copy" style={{ background: copied ? `${color}30` : "rgba(255,255,255,0.06)", border: `1px solid ${copied ? color + "50" : "rgba(255,255,255,0.1)"}`, borderRadius: 6, padding: "2px 7px", cursor: "pointer", fontSize: 11, color: copied ? color : "rgba(255,255,255,0.5)", transition: "all 0.2s", verticalAlign: "middle", marginLeft: 4, lineHeight: 1, fontFamily: "'Zen Kaku Gothic New'" }}>{copied ? "✓" : "📋"}</button>);
+  return (<button onClick={copy} title="Copy" style={{ background: copied ? `${color}30` : "transparent", border: "none", cursor: "pointer", padding: "2px 4px", verticalAlign: "middle", marginLeft: 3, lineHeight: 1, transition: "all 0.2s", opacity: copied ? 1 : 0.4 }}>
+    {copied ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="3"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>}
+  </button>);
 };
 
+// ─── WEB & INSTAGRAM BUTTONS ───
+const WebBtn = ({ query, color }) => (
+  <a href={`https://www.google.com/search?q=${encodeURIComponent(query + ' official site')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} title="Website" style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle", marginLeft: 3, padding: "2px 4px", opacity: 0.4, transition: "opacity 0.2s", textDecoration: "none" }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0.4}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+  </a>
+);
+
+const InstaBtn = ({ query, color }) => (
+  <a href={`https://www.instagram.com/explore/tags/${encodeURIComponent(query.replace(/[^a-zA-Z0-9\u3000-\u9FFF]/g, '').toLowerCase())}/`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} title="Instagram" style={{ display: "inline-flex", alignItems: "center", verticalAlign: "middle", marginLeft: 2, padding: "2px 4px", opacity: 0.4, transition: "opacity 0.2s", textDecoration: "none" }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0.4}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="rgba(255,255,255,0.7)" stroke="none"/></svg>
+  </a>
+);
+
 // ─── SHARE / PDF ───
-function buildShareHTML(title, activities, locationName, tMode, color) {
+function buildShareHTML(title, activities, locationName, tMode, color, timing = {}) {
   const modeLabel = { car: "🚗 Driving", bus: "🚌 Bus", walking: "🚶 Walking" }[tMode] || "🚗 Driving";
+  const { dH, dM, noTime, mult = 1 } = timing;
+  const hasTiming = !noTime && dH != null;
+  const dep = hasTiming ? dH + (dM || 0) / 60 : 0;
+  const fmtT = (h, m) => { const hh = ((Math.floor(h) % 24) + 24) % 24; return `${hh === 0 ? 12 : hh > 12 ? hh - 12 : hh}:${String(Math.max(0, Math.min(59, Math.round(m)))).padStart(2, "0")} ${hh >= 12 ? "PM" : "AM"}`; };
+  const fmtDur = m => { const h = Math.floor(m / 60), mm = m % 60; return h === 0 ? `${mm}m` : mm === 0 ? `${h}h` : `${h}h ${mm}m`; };
+
+  // Build per-activity timing
+  let runH = dep;
+  const timingRows = activities.map(a => {
+    const adj = Math.round(a.travelMin * (mult || 1));
+    const arriveH = runH + adj / 60;
+    const doneH = arriveH + a.activityMin / 60;
+    const backH = doneH + adj / 60;
+    const row = { adj, arriveH, doneH, backH, tot: adj * 2 + a.activityMin };
+    runH = doneH + (activities.length > 1 ? Math.max(5, adj) / 60 : 0); // travel between for combos
+    return row;
+  });
+
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${title} — Hokkaido Quest</title>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Zen Kaku Gothic New',sans-serif;background:#0a0a1a;color:#fff;padding:24px;max-width:640px;margin:0 auto}
-@media print{body{background:#fff;color:#111;padding:12px}h1{color:#111!important}.card{border:1px solid #ddd!important;background:#fafafa!important}.tip{background:#f5f5f5!important;border-color:#ddd!important;color:#333!important}.tag{background:#eee!important;color:#444!important}.hdr{color:#111!important}.sub{color:#666!important}.desc{color:#333!important}a{color:#0066cc!important}}
+@media print{body{background:#fff;color:#111;padding:12px}h1{color:#111!important}.card{border:1px solid #ddd!important;background:#fafafa!important}.tip{background:#f5f5f5!important;border-color:#ddd!important;color:#333!important}.tag{background:#eee!important;color:#444!important}.timeline{background:#f5f5f5!important;border-color:#ddd!important}.tl-time{color:#333!important}.tl-label{color:#555!important}.hdr{color:#111!important}.sub{color:#666!important}.desc{color:#333!important}a{color:#0066cc!important}}
 h1{font-family:'Dela Gothic One';font-size:22px;color:${color};margin-bottom:4px}
 .sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:20px;letter-spacing:2px}
 .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:18px;margin-bottom:14px;page-break-inside:avoid}
 .card h2{font-family:'Dela Gothic One';font-size:17px;margin-bottom:2px;color:#fff}
-.hdr{font-family:'Dela Gothic One'}
 .jp{font-size:13px;color:${color};opacity:0.8;margin-bottom:10px;letter-spacing:1px}
 .desc{font-size:14px;color:rgba(255,255,255,0.7);line-height:1.6;margin-bottom:10px}
 .tip{background:${color}12;border:1px solid ${color}25;border-radius:8px;padding:8px 12px;font-size:13px;color:${color};font-style:italic;line-height:1.5;margin-bottom:10px}
+.timeline{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13px;line-height:1.8}
+.tl-time{font-family:'Dela Gothic One';color:${color}}
+.tl-label{color:rgba(255,255,255,0.5)}
 .tags{display:flex;flex-wrap:wrap;gap:6px}
 .tag{background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 10px;font-size:12px;color:rgba(255,255,255,0.55)}
 .tag.accent{background:${color}20;color:${color};font-family:'Dela Gothic One'}
@@ -32,22 +68,33 @@ a.map{display:inline-block;background:${color}20;border:1px solid ${color}40;bor
 @media print{.no-print{display:none!important}}
 </style></head><body>
 <h1>北海道 ${title}</h1>
-<div class="sub">${locationName.toUpperCase()} · ${modeLabel} · ${activities.length} ACTIVIT${activities.length === 1 ? 'Y' : 'IES'}</div>
-${activities.map((a, i) => `
+<div class="sub">${locationName.toUpperCase()} · ${modeLabel}${hasTiming ? ` · Depart ${fmtT(dH, dM || 0)}` : ''} · ${activities.length} ACTIVIT${activities.length === 1 ? 'Y' : 'IES'}</div>
+${activities.map((a, i) => {
+  const t = timingRows[i];
+  return `
 <div class="card">
   <h2>${i + 1}. ${a.name}</h2>
   <div class="jp">${a.nameJp}</div>
+  ${hasTiming ? `<div class="timeline">
+    <span class="tl-time">🕐 Arrive ${fmtT(t.arriveH, (t.arriveH % 1) * 60)}</span>
+    <span class="tl-label"> → ${a.activityMin}min activity → </span>
+    <span class="tl-time">🏠 Back by ${fmtT(t.backH, (t.backH % 1) * 60)}</span>
+    <span class="tl-label"> · ⌛ ${fmtDur(t.tot)} total</span>
+  </div>` : `<div class="timeline">
+    <span class="tl-label">${tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} ${t.adj}min each way · ${a.activityMin}min activity · ⌛ ~${fmtDur(t.tot)} total</span>
+  </div>`}
   <div class="desc">${a.desc}</div>
   <div class="tip">💡 ${a.tip}</div>
   <div class="tags">
     <span class="tag accent">★ ${a.rating}</span>
     <span class="tag">${a.cost}</span>
-    <span class="tag">🕐 ${a.activityMin}min activity</span>
-    <span class="tag">${tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} ${a.travelMin}min travel</span>
+    <span class="tag">${tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} ${t.adj}min travel</span>
+    <span class="tag">Open ${a.openH || '?'}:00–${a.closeH || '?'}:00</span>
     ${a.eventWindow ? `<span class="tag">🗓️ ${a.eventWindow}</span>` : ''}
   </div>
   <a class="map" href="https://www.google.com/maps/search/?api=1&query=${a.mapQuery}" target="_blank">📍 Open in Google Maps</a>
-</div>`).join('')}
+</div>`;
+}).join('')}
 <div class="footer">Generated by Hokkaido Quest 北海道 · ${new Date().toLocaleDateString()}</div>
 <div class="no-print" style="text-align:center;margin-top:20px">
   <button onclick="window.print()" style="background:${color};color:#000;border:none;border-radius:10px;padding:12px 28px;font-family:'Dela Gothic One';font-size:15px;cursor:pointer">📄 Save as PDF</button>
@@ -55,33 +102,55 @@ ${activities.map((a, i) => `
 </body></html>`;
 }
 
-const ShareBtn = ({ activities, title, locationName, tMode, color, label = "📤", small = false }) => {
+const ShareBtn = ({ activities, title, locationName, tMode, color, label = "📤", small = false, dH, dM, noTime, mult }) => {
   const [busy, setBusy] = useState(false);
+  const fmtT = (h, m) => { const hh = ((Math.floor(h) % 24) + 24) % 24; return `${hh === 0 ? 12 : hh > 12 ? hh - 12 : hh}:${String(Math.max(0, Math.min(59, Math.round(m)))).padStart(2, "0")} ${hh >= 12 ? "PM" : "AM"}`; };
+  const fmtDur = m => { const h = Math.floor(m / 60), mm = m % 60; return h === 0 ? `${mm}m` : mm === 0 ? `${h}h` : `${h}h ${mm}m`; };
+
   const handleShare = async (e) => {
     e.stopPropagation();
     setBusy(true);
+    const timing = { dH, dM, noTime, mult: mult || 1 };
+    const hasTiming = !noTime && dH != null;
+    const dep = hasTiming ? dH + (dM || 0) / 60 : 0;
+    const modeIcon = tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗";
+
     try {
-      // Build text summary for native share
-      const text = `${title} — Hokkaido Quest\n\n` +
-        activities.map((a, i) => `${i + 1}. ${a.name} (${a.nameJp}) ★${a.rating}\n   ${a.desc}\n   💡 ${a.tip}\n   📍 https://www.google.com/maps/search/?api=1&query=${a.mapQuery}\n`).join('\n');
-      
-      // Try native share first (works great on iPhone)
+      // Build text summary with timing
+      let runH = dep;
+      const lines = activities.map((a, i) => {
+        const adj = Math.round(a.travelMin * (mult || 1));
+        const arriveH = runH + adj / 60;
+        const backH = arriveH + a.activityMin / 60 + adj / 60;
+        const tot = adj * 2 + a.activityMin;
+        runH = arriveH + a.activityMin / 60 + (activities.length > 1 ? Math.max(5, adj) / 60 : 0);
+
+        let timeLine = '';
+        if (hasTiming) {
+          timeLine = `   🕐 Arrive ${fmtT(arriveH, (arriveH % 1) * 60)} → ${a.activityMin}min → 🏠 Back ${fmtT(backH, (backH % 1) * 60)} (${fmtDur(tot)} total)\n`;
+        } else {
+          timeLine = `   ${modeIcon} ${adj}min each way · ${a.activityMin}min activity · ~${fmtDur(tot)} total\n`;
+        }
+        return `${i + 1}. ${a.name} (${a.nameJp}) ★${a.rating}\n${timeLine}   ${a.desc}\n   💡 ${a.tip}\n   📍 https://www.google.com/maps/search/?api=1&query=${a.mapQuery}\n`;
+      }).join('\n');
+
+      const header = hasTiming ? `Depart ${fmtT(dH, dM || 0)} · ${modeIcon}\n\n` : `${modeIcon} Travel mode\n\n`;
+      const text = `${title} — Hokkaido Quest\n${header}${lines}`;
+
       if (navigator.share) {
         await navigator.share({ title: `${title} — Hokkaido Quest`, text });
         setBusy(false);
         return;
       }
-      
-      // Fallback: open printable page (Save as PDF from print dialog)
-      const html = buildShareHTML(title, activities, locationName, tMode, color);
+
+      const html = buildShareHTML(title, activities, locationName, tMode, color, timing);
       const blob = new Blob([html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank');
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) {
-      // Share was cancelled or failed — try the printable page
       if (err.name !== 'AbortError') {
-        const html = buildShareHTML(title, activities, locationName, tMode, color);
+        const html = buildShareHTML(title, activities, locationName, tMode, color, { dH, dM, noTime, mult });
         const blob = new Blob([html], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
@@ -588,7 +657,7 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
       {v?.status === 'temp_closed' && <div style={{ background: "rgba(255,100,50,0.15)", border: "1px solid rgba(255,100,50,0.3)", borderRadius: 10, padding: "8px 14px", marginBottom: 14, fontFamily: "'Dela Gothic One'", fontSize: 13, color: "#ff8844", display: "flex", alignItems: "center", gap: 6 }}>⚠️ Temporarily Closed — verify before visiting</div>}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 4 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 19, color: "#fff", marginBottom: 2 }}>{a.name}<CopyBtn text={a.name} color={color} /></div>
+          <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 19, color: "#fff", marginBottom: 2 }}>{a.name}<CopyBtn text={a.name} color={color} /><WebBtn query={a.name + ' ' + (a.nameJp || '') + ' Hokkaido'} color={color} /><InstaBtn query={a.nameJp || a.name} color={color} /></div>
           <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: color, opacity: 0.8, letterSpacing: 1 }}>{a.nameJp}<CopyBtn text={a.nameJp} color={color} /></div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "auto auto", gap: 5, flexShrink: 0, justifyItems: "end" }}>
@@ -627,7 +696,7 @@ const Cd = ({ a, color, i, dH, dM, tMode, noTime, isClosest }) => {
         <div style={{ background: `${color}20`, borderRadius: 8, padding: "5px 12px", fontFamily: "'Dela Gothic One'", fontSize: 13, color: color }}>⌛ {fmtD(tot)} total</div>
         <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "5px 12px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{a.cost}</div>
         {v && v.status === 'open' && <div style={{ background: "rgba(50,200,100,0.1)", border: "1px solid rgba(50,200,100,0.2)", borderRadius: 8, padding: "5px 10px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "rgba(50,200,100,0.7)" }}>✓ Verified</div>}
-        <ShareBtn activities={[a]} title={a.name} locationName="Hokkaido" tMode={tMode} color={color} label="📤 Share" small={true} />
+        <ShareBtn activities={[a]} title={a.name} locationName="Hokkaido" tMode={tMode} color={color} label="📤 Share" small={true} dH={dH} dM={dM} noTime={noTime} mult={mult} />
         <a href={map} target="_blank" rel="noopener noreferrer" style={{ marginLeft: "auto", background: `${color}20`, border: `1px solid ${color}40`, borderRadius: 8, padding: "5px 14px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: color, textDecoration: "none" }}>📍 Map</a>
       </div>
     </div>
@@ -993,7 +1062,7 @@ export default function App() {
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
                 <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 16, color: "#ff8888", display: "flex", alignItems: "center", gap: 6 }}>🔥 Most Popular</div>
                 <div style={{ flex: 1, height: 1, background: "rgba(255,100,100,0.15)" }} />
-                <ShareBtn activities={grouped.popular} title="Most Popular" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" />
+                <ShareBtn activities={grouped.popular} title="Most Popular" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} />
                 <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{grouped.popular.length}</div>
               </div>
               {grouped.popular.map((a, i) => <Cd key={a.name} a={a} color={L.color} i={i} dH={dH} dM={dM} tMode={tMode} noTime={noTime} />)}
@@ -1002,7 +1071,7 @@ export default function App() {
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
                 <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 16, color: L.color, display: "flex", alignItems: "center", gap: 6 }}>📍 Closest to You</div>
                 <div style={{ flex: 1, height: 1, background: `${L.color}20` }} />
-                <ShareBtn activities={grouped.closest} title="Closest Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" />
+                <ShareBtn activities={grouped.closest} title="Closest Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} />
                 <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{grouped.closest.length}</div>
               </div>
               {grouped.closest.map((a, i) => <Cd key={a.name} a={a} color={L.color} i={i + grouped.popular.length} dH={dH} dM={dM} tMode={tMode} noTime={noTime} isClosest={true} />)}
@@ -1011,17 +1080,17 @@ export default function App() {
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
                 <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 16, color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", gap: 6 }}>🗾 More Activities</div>
                 <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-                <ShareBtn activities={grouped.rest} title="More Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" />
+                <ShareBtn activities={grouped.rest} title="More Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} />
                 <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{grouped.rest.length}</div>
               </div>
               {grouped.rest.map((a, i) => <Cd key={a.name} a={a} color={L.color} i={i + grouped.popular.length + grouped.closest.length} dH={dH} dM={dM} tMode={tMode} noTime={noTime} />)}
             </>}
           </div> : <Emp />)}
 
-          {tab === "extra" && !noTime && (extra.length > 0 ? <div style={{ position: "relative", zIndex: 2 }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><div style={{ background: `${L.color}08`, border: `1px solid ${L.color}20`, borderRadius: 12, padding: "12px 16px", flex: 1, fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>These match your vibe but need more than <strong style={{ color: L.color }}>{fmtD(time)}</strong>. Plan for a longer break.</div><div style={{ marginLeft: 10, flexShrink: 0 }}><ShareBtn activities={extra} title="Extra Time Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" /></div></div><div style={{ display: "flex", flexDirection: "column", gap: 16 }}>{extra.map((a, i) => { const adj = Math.round(a.travelMin * mult); const ov = (adj * 2 + a.activityMin) - time; return (<div key={a.name} style={{ position: "relative" }}><div style={{ position: "absolute", top: 14, left: 14, zIndex: 6, background: "linear-gradient(135deg,#ff4444,#cc0000)", borderRadius: 8, padding: "4px 10px", fontFamily: "'Dela Gothic One'", fontSize: 12, color: "#fff" }}>+{fmtD(ov)} over</div><Cd a={a} color={L.color} i={i} dH={dH} dM={dM} tMode={tMode} noTime={false} /></div>); })}</div></div> : <Emp msg="All matching activities fit — nice!" />)}
+          {tab === "extra" && !noTime && (extra.length > 0 ? <div style={{ position: "relative", zIndex: 2 }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><div style={{ background: `${L.color}08`, border: `1px solid ${L.color}20`, borderRadius: 12, padding: "12px 16px", flex: 1, fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>These match your vibe but need more than <strong style={{ color: L.color }}>{fmtD(time)}</strong>. Plan for a longer break.</div><div style={{ marginLeft: 10, flexShrink: 0 }}><ShareBtn activities={extra} title="Extra Time Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} /></div></div><div style={{ display: "flex", flexDirection: "column", gap: 16 }}>{extra.map((a, i) => { const adj = Math.round(a.travelMin * mult); const ov = (adj * 2 + a.activityMin) - time; return (<div key={a.name} style={{ position: "relative" }}><div style={{ position: "absolute", top: 14, left: 14, zIndex: 6, background: "linear-gradient(135deg,#ff4444,#cc0000)", borderRadius: 8, padding: "4px 10px", fontFamily: "'Dela Gothic One'", fontSize: 12, color: "#fff" }}>+{fmtD(ov)} over</div><Cd a={a} color={L.color} i={i} dH={dH} dM={dM} tMode={tMode} noTime={false} /></div>); })}</div></div> : <Emp msg="All matching activities fit — nice!" />)}
 
           {tab === "combo" && (combos.length > 0 ? <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "relative", zIndex: 2 }}>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: -6 }}><ShareBtn activities={combos.flatMap(c => c.acts)} title={`${combos.length} Combos`} locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All Combos" /></div>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: -6 }}><ShareBtn activities={combos.flatMap(c => c.acts)} title={`${combos.length} Combos`} locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All Combos" dH={dH} dM={dM} noTime={noTime} mult={mult} /></div>
             {combos.map((c, ci) => {
               const isE = expC === ci;
               // Build timeline (used only in timed mode)
@@ -1058,7 +1127,7 @@ export default function App() {
                               <div style={{ width: 30, flexShrink: 0, textAlign: "right", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>{si + 1}.</div>
                               <div style={{ width: 8, height: 8, borderRadius: "50%", background: L.color, flexShrink: 0, marginTop: 5, boxShadow: `0 0 8px ${L.color}60` }} />
                               <div style={{ flex: 1 }}>
-                                <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 15 }}>{a.name}<CopyBtn text={a.name} color={L.color} /></div>
+                                <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 15 }}>{a.name}<CopyBtn text={a.name} color={L.color} /><WebBtn query={a.name + ' ' + (a.nameJp || '') + ' Hokkaido'} color={L.color} /><InstaBtn query={a.nameJp || a.name} color={L.color} /></div>
                                 <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{a.activityMin}min · {a.cost} · {tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} {Math.round(a.travelMin * mult)}min from base</div>
                                 <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: L.color, opacity: 0.7, fontStyle: "italic", marginTop: 4 }}>💡 {a.tip}</div>
                               </div>
@@ -1075,14 +1144,14 @@ export default function App() {
                       ) : (
                         /* ─── Timed mode: full timeline with clock ─── */
                         <>
-                          {tl.map((s, si) => (<div key={si} style={{ marginBottom: si < tl.length - 1 ? 14 : 0 }}><div style={{ display: "flex", gap: 10 }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>{fmt(Math.floor(s.ar), Math.round((s.ar % 1) * 60))}</div><div style={{ width: 8, height: 8, borderRadius: "50%", background: L.color, flexShrink: 0, marginTop: 4, boxShadow: `0 0 8px ${L.color}60` }} /><div><div style={{ fontFamily: "'Dela Gothic One'", fontSize: 15 }}>{s.a.name}<CopyBtn text={s.a.name} color={L.color} /></div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{s.a.activityMin}min · {s.a.cost}</div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: L.color, opacity: 0.7, fontStyle: "italic", marginTop: 4 }}>💡 {s.a.tip}</div></div></div>{si < tl.length - 1 && <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{fmt(Math.floor(s.dn), Math.round((s.dn % 1) * 60))}</div><div style={{ width: 8, display: "flex", justifyContent: "center", flexShrink: 0 }}><div style={{ width: 1, height: 18, background: `${L.color}30` }} /></div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} {c.travs[si]}min</div></div>}</div>))}
+                          {tl.map((s, si) => (<div key={si} style={{ marginBottom: si < tl.length - 1 ? 14 : 0 }}><div style={{ display: "flex", gap: 10 }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>{fmt(Math.floor(s.ar), Math.round((s.ar % 1) * 60))}</div><div style={{ width: 8, height: 8, borderRadius: "50%", background: L.color, flexShrink: 0, marginTop: 4, boxShadow: `0 0 8px ${L.color}60` }} /><div><div style={{ fontFamily: "'Dela Gothic One'", fontSize: 15 }}>{s.a.name}<CopyBtn text={s.a.name} color={L.color} /><WebBtn query={s.a.name + ' ' + (s.a.nameJp || '') + ' Hokkaido'} color={L.color} /><InstaBtn query={s.a.nameJp || s.a.name} color={L.color} /></div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>{s.a.activityMin}min · {s.a.cost}</div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: L.color, opacity: 0.7, fontStyle: "italic", marginTop: 4 }}>💡 {s.a.tip}</div></div></div>{si < tl.length - 1 && <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{fmt(Math.floor(s.dn), Math.round((s.dn % 1) * 60))}</div><div style={{ width: 8, display: "flex", justifyContent: "center", flexShrink: 0 }}><div style={{ width: 1, height: 18, background: `${L.color}30` }} /></div><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{tMode === "walking" ? "🚶" : tMode === "bus" ? "🚌" : "🚗"} {c.travs[si]}min</div></div>}</div>))}
                           <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}><div style={{ width: 55, flexShrink: 0, textAlign: "right", fontFamily: "'Dela Gothic One'", fontSize: 13, color: L.color }}>{fmt(Math.floor(ret), Math.round((ret % 1) * 60))}</div><div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.3)", flexShrink: 0 }} /><div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.55)" }}>🏠 Back</div></div>
                         </>
                       )}
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       {c.acts.map((a, ai) => <a key={ai} href={`https://www.google.com/maps/search/?api=1&query=${a.mapQuery}`} target="_blank" rel="noopener noreferrer" style={{ background: `${L.color}15`, border: `1px solid ${L.color}30`, borderRadius: 8, padding: "6px 12px", fontFamily: "'Zen Kaku Gothic New'", fontSize: 13, color: L.color, textDecoration: "none" }}>📍 {a.name}</a>)}
-                      <ShareBtn activities={c.acts} title={c.acts.map(a => a.name).join(" → ")} locationName={L.name} tMode={tMode} color={L.color} label="📤 Share Combo" />
+                      <ShareBtn activities={c.acts} title={c.acts.map(a => a.name).join(" → ")} locationName={L.name} tMode={tMode} color={L.color} label="📤 Share Combo" dH={dH} dM={dM} noTime={noTime} mult={mult} />
                     </div>
                   </div>}
                 </div>
