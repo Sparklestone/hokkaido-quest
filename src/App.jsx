@@ -403,26 +403,106 @@ const LOCATIONS = {
 
 // Known landmark coordinates for map accuracy
 const KNOWN_COORDS = {
-  "Lake+Toya+Hokkaido":[42.596,140.856],"Usuzan+Ropeway":[42.534,140.844],"Noboribetsu+Jigokudani":[42.495,141.138],
-  "Kyogoku+Spring+Water+Village":[42.864,140.513],"Upopoy+Shiraoi":[42.554,141.354],"Nikka+Whisky+Yoichi+Distillery":[43.173,140.773],
-  "Hoheikyo+Onsen+Sapporo":[42.960,141.180],"Sapporo+TV+Tower":[43.061,141.357],"Nijo+Market+Sapporo":[43.061,141.347],
-  "Odori+Park+Sapporo":[43.059,141.356],"Tanukikoji+Shopping+Street+Sapporo":[43.058,141.349],"Susukino+Sapporo":[43.054,141.353],
-  "Shiroi+Koibito+Park+Sapporo":[43.076,141.276],"Moerenuma+Park+Sapporo":[43.112,141.407],"Maruyama+Park+Sapporo":[43.053,141.310],
-  "Jozankei+Onsen+Sapporo":[42.969,141.157],"Lake+Shikotsu+Ice+Festival":[42.779,141.325],"Asahiyama+Memorial+Park+Sapporo":[43.044,141.354],
-  "Sapporo+Ramen+Yokocho":[43.055,141.354],"Sapporo+Beer+Museum":[43.071,141.362],"Sapporo+Snow+Festival":[43.059,141.356],
-  "Hirafu+Niseko":[42.863,140.699],"Niseko+Village":[42.858,140.665],"Annupuri+Niseko":[42.860,140.641],
-  "Hanazono+Niseko":[42.882,140.719],
+  // ─── RUSUTSU RESORT (inside resort, travelMin 3) ───
+  "Fuka+Restaurant+Rusutsu+Resort":[42.7525,140.2360],"Sekkatei+Rusutsu+Resort":[42.7523,140.2355],
+  "Orbist+Bar+Rusutsu+Resort":[42.7520,140.2362],"Pub+Cricket+Rusutsu+Resort":[42.7518,140.2358],
+  "Costa+Terrazza+Rusutsu+Resort":[42.7527,140.2368],"Kanten+Rusutsu+Resort":[42.7522,140.2372],
+  "Rusutsu+Resort+Carousel":[42.7530,140.2380],"Rusutsu+Resort+Wave+Pool":[42.7528,140.2375],
+  "Rusutsu+Resort+Climbing+Wall":[42.7526,140.2383],"Rusutsu+Resort+Daniel+Street":[42.7524,140.2370],
+  "Rusutsu+Resort+Entertainment":[42.7529,140.2377],"Rusutsu+Resort+Kotobuki+Onsen":[42.7535,140.2365],
+  "Rusutsu+Resort+Shop":[42.7521,140.2366],"Rusutsu+Resort+Cheese+Making":[42.7532,140.2372],
+  "Westin+Rusutsu+Resort+Spa":[42.7540,140.2350],
+  // ─── RUSUTSU VILLAGE (travelMin 5) ───
+  "Uo+Teru+Rusutsu":[42.7510,140.2340],"Mokumokuya+Rusutsu":[42.7505,140.2335],
+  "Rodeo+Drive+Rusutsu":[42.7508,140.2330],"Rusutsu+Sakaba":[42.7512,140.2345],
+  "Tanpopo+Shokudo+Rusutsu":[42.7515,140.2350],"The+Red+House+Rusutsu":[42.7503,140.2325],
+  "Nabedokoro+Yochan+Rusutsu":[42.7500,140.2338],"Youtei+Izakaya+Rusutsu":[42.7507,140.2342],
+  "La+queue+crochet+Rusutsu":[42.7495,140.2310],"Seicomart+Rusutsu":[42.7513,140.2348],
+  "7-Eleven+Rusutsu+Resort":[42.7516,140.2352],
+  // ─── RUSUTSU OUTDOOR (travelMin 5-10) ───
+  "Rusutsu+Snowmobile+Tour":[42.7560,140.2400],"Rusutsu+Snow+Rafting":[42.7555,140.2395],
+  "Rusutsu+Snow+Tubing":[42.7550,140.2390],"Rusutsu+Snowshoe+Trek":[42.7570,140.2320],
+  "Rusutsu+Shrine+Hokkaido":[42.7545,140.2310],
+  // ─── KIMOBETSU (travelMin 10) ───
+  "TAKiBi+Kimobetsu":[42.7170,140.3000],"Kikoz+Kimobetsu":[42.7155,140.2980],
+  "Potato+Inn+Papa+Kimobetsu":[42.7165,140.3020],"Kimobetsu+Izakaya":[42.7160,140.3010],
+  "Kimobetsu+Art+Studio":[42.7175,140.2990],
+  // ─── RUSUTSU FARTHER (travelMin 10-15) ───
+  "Michi+no+Eki+230+Rusutsu":[42.7580,140.2480],
+  // ─── LAKE TOYA (travelMin 30) ───
+  "Lake+Toya+Hokkaido":[42.596,140.856],"Lake+Toya+Cafe":[42.5920,140.8500],
+  "Lake+Toya+Fireworks":[42.5960,140.8520],"Lake+Toya+Glass+Art":[42.5900,140.8480],
+  "Lake+Toya+Ice+Fishing":[42.5940,140.8540],"Lake+Toya+Sculpture+Park":[42.5880,140.8460],
+  "Toya+Sun+Palace+Onsen":[42.5830,140.8420],"Toyako+Visitor+Center":[42.5950,140.8500],
+  "Usuzan+Ropeway":[42.534,140.844],
+  // ─── OTHER RUSUTSU DESTINATIONS ───
+  "Noboribetsu+Jigokudani":[42.495,141.138],"Kyogoku+Spring+Water+Village":[42.864,140.513],
+  "Upopoy+Shiraoi":[42.554,141.354],"Upopoy+Ainu+Museum+Shiraoi":[42.554,141.354],
+  // ─── NISEKO HIRAFU ───
+  "Hirafu+Niseko":[42.863,140.699],"Hirafu+Main+Street+Niseko":[42.8628,140.6985],
+  "Bar+Gyu+Niseko+Hirafu":[42.8632,140.6990],"Tepache+Niseko+Hirafu":[42.8625,140.6975],
+  "Ebisutei+Niseko+Hirafu":[42.8630,140.6972],"Wild+Bills+Niseko":[42.8620,140.6995],
+  "Half+Note+Bar+Niseko":[42.8618,140.6980],"Toshiros+Bar+Niseko":[42.8635,140.6968],
+  "Lawson+Hirafu+Niseko":[42.8622,140.6988],"Seicomart+Hirafu+Niseko":[42.8627,140.6992],
+  "BCC+Whiterock+Niseko":[42.8615,140.6998],"Hidden+Stand+Coffee+Niseko":[42.8638,140.6978],
+  // ─── NISEKO AREA ───
+  "Niseko+Village":[42.858,140.665],"Annupuri+Niseko":[42.860,140.641],"Hanazono+Niseko":[42.882,140.719],
+  "Hanazono+Lantern+Walk+Niseko":[42.880,140.717],"Yukoro+Onsen+Niseko":[42.870,140.705],
+  "Konbu+Onsen+Niseko":[42.840,140.660],"Glass+Studio+Niseko":[42.868,140.710],
+  "Takahashi+Dairy+Farm+Niseko":[42.845,140.675],"Soga+Shrine+Niseko":[42.855,140.680],
+  "Mt+Yotei+Viewpoint+Niseko":[42.850,140.670],"Green+Farm+Cafe+Niseko":[42.855,140.690],
+  "Graubunden+Cafe+Niseko":[42.863,140.695],"Makkari+Coffee+Hokkaido":[42.830,140.595],
+  "Markie+Curry+Niseko":[42.862,140.697],"Akaru+Restaurant+Niseko":[42.860,140.692],
+  "Gokoro+Udon+Niseko":[42.864,140.696],"Sushi+Shin+Niseko":[42.866,140.700],
+  "Hanayoshi+Sushi+Niseko":[42.865,140.698],
+  // ─── KUTCHAN ───
+  "Kutchan+Town+Center":[42.905,140.753],"Kutchan+Museum":[42.907,140.755],
+  "Sprout+Coffee+Kutchan":[42.904,140.750],"Chiharu+Zushi+Kutchan":[42.906,140.752],
+  "Coop+Supermarket+Kutchan":[42.903,140.748],"Liquor+Store+Kutchan":[42.905,140.751],
+  "Nikka+Whisky+Yoichi+Distillery":[43.173,140.773],
+  // ─── SAPPORO CORE ───
+  "Sapporo+TV+Tower":[43.061,141.357],"Sapporo+Clock+Tower":[43.063,141.354],
+  "Nijo+Market+Sapporo":[43.061,141.347],"Sapporo+Jogai+Market":[43.063,141.349],
+  "Odori+Park+Sapporo":[43.059,141.356],"Tanukikoji+Shopping+Street+Sapporo":[43.058,141.349],
+  "Tanuki+Koji+Sapporo":[43.058,141.349],"Tanuki+Koji+Sake+Shop+Sapporo":[43.057,141.350],
+  "Susukino+Sapporo":[43.054,141.353],"Susukino+Arcade+Sapporo":[43.053,141.352],
+  "Sapporo+Ramen+Yokocho":[43.055,141.354],"Daruma+Genghis+Khan+Sapporo":[43.053,141.351],
+  "Suage+Soup+Curry+Sapporo":[43.056,141.355],"Naruto+Zangi+Sapporo":[43.054,141.350],
+  "Nanda+Seafood+Buffet+Sapporo":[43.052,141.353],"Sapporo+Kimono+Experience":[43.055,141.348],
+  "Sapporo+Wine+Cheese+Bar":[43.053,141.354],"Sapporo+Drug+Store":[43.055,141.352],
+  "Matsumoto+Kiyoshi+Tanuki+Koji+Sapporo":[43.057,141.351],
+  "Don+Quijote+Tanuki+Koji+Sapporo":[43.056,141.350],"Seicomart+Sapporo":[43.058,141.353],
+  "Daiso+Sapporo+Station":[43.068,141.352],
+  // ─── SAPPORO WIDER ───
+  "Sapporo+Beer+Museum":[43.071,141.362],"Sapporo+Beer+Garden+Genghis+Khan":[43.070,141.361],
+  "Sapporo+Beer+Museum+Shop":[43.071,141.363],"Sapporo+Red+Brick+Building":[43.064,141.348],
+  "Shiroi+Koibito+Park+Sapporo":[43.076,141.276],"Shiroi+Koibito+Park+Illumination":[43.076,141.276],
+  "Moerenuma+Park+Sapporo":[43.112,141.407],"Maruyama+Park+Sapporo":[43.053,141.310],
+  "Maruyama+Zoo+Sapporo":[43.050,141.308],"Hokkaido+Shrine+Sapporo":[43.054,141.308],
+  "Hill+of+the+Buddha+Sapporo":[43.018,141.335],"Mt+Moiwa+Ropeway+Sapporo":[43.020,141.330],
+  "Historical+Village+of+Hokkaido":[43.063,141.507],"Hokkaido+Museum+Sapporo":[43.062,141.505],
+  "Hokkaido+Museum+Modern+Art":[43.055,141.340],"Asahiyama+Memorial+Park+Sapporo":[43.044,141.354],
+  "Toyohira+River+Sapporo":[43.040,141.360],"Stellar+Place+JR+Tower+Sapporo":[43.069,141.351],
+  "Baristart+Coffee+Sapporo":[43.057,141.345],"Morihico+Coffee+Sapporo":[43.048,141.345],
+  "FAbULOUS+Coffee+Sapporo":[43.060,141.350],"Saturdays+Chocolate+Sapporo":[43.056,141.343],
+  "Mondo+Soba+Experience+Sapporo":[43.058,141.346],"AOAO+Sapporo+Aquarium":[43.055,141.356],
+  "Hitsujigaoka+Snow+Park+Sapporo":[43.001,141.380],"Takino+Snow+World+Sapporo":[42.962,141.377],
+  "Jozankei+Onsen+Sapporo":[42.969,141.157],"Hoheikyo+Onsen+Sapporo":[42.960,141.180],
+  "Lake+Shikotsu+Ice+Festival":[42.779,141.325],
+  // ─── SAPPORO EVENTS ───
+  "Sapporo+Snow+Festival+Odori":[43.059,141.356],"Sapporo+Snow+Festival":[43.059,141.356],
+  "Sapporo+White+Illumination":[43.059,141.355],"Sapporo+Christmas+Market+Odori":[43.060,141.356],
 };
 
 // Compute approximate map coordinates from travelMin and name hash
 function getCoords(a, locData) {
   if (KNOWN_COORDS[a.mapQuery]) return KNOWN_COORDS[a.mapQuery];
-  // Use name as seed for consistent direction
+  // Tight scatter for nearby places, wider for far ones
   let hash = 0;
   for (let i = 0; i < a.name.length; i++) hash = ((hash << 5) - hash + a.name.charCodeAt(i)) | 0;
   const angle = (Math.abs(hash) % 360) * Math.PI / 180;
-  // ~0.008 degrees per minute of driving ≈ 0.8km/min
-  const dist = a.travelMin * 0.003;
+  // Tighter radius: 0.001 deg/min ≈ 110m/min — local restaurants cluster near base
+  const dist = a.travelMin * 0.001;
   return [locData.lat + dist * Math.cos(angle), locData.lng + dist * Math.sin(angle) * 1.3];
 }
 
@@ -818,6 +898,206 @@ const MapBtn = ({ onClick, color }) => (
   <button onClick={onClick} style={{ background: `${color}15`, border: `1px solid ${color}30`, borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 12, color, fontFamily: "'Dela Gothic One'", transition: "all 0.2s", display: "inline-flex", alignItems: "center", gap: 5 }}>🗺 Map</button>
 );
 
+const COMBO_COLORS = ["#FF6B6B","#4ECDC4","#FFE66D","#A78BFA","#F97316","#34D399","#F472B6","#60A5FA","#FBBF24","#C084FC","#FB7185","#2DD4BF"];
+
+const ComboMapCard = ({ combos, locData, baseColor, onClose, onSelect, tMode }) => {
+  const mapRef = useRef(null);
+  const leafletMap = useRef(null);
+  const routeLayers = useRef([]);
+  const markerLayers = useRef([]);
+  const [activeCi, setActiveCi] = useState(null);
+  const mult = travelMult(tMode);
+
+  const loadLeaflet = (cb) => {
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css'; link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+    if (window.L) { cb(window.L); }
+    else {
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      s.onload = () => setTimeout(() => cb(window.L), 50);
+      document.head.appendChild(s);
+    }
+  };
+
+  useEffect(() => {
+    if (!mapRef.current || !locData) return;
+    loadLeaflet((Lf) => {
+      if (!Lf || leafletMap.current) return;
+      const map = Lf.map(mapRef.current, { zoomControl: false, attributionControl: false }).setView([locData.lat, locData.lng], 11);
+      Lf.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+      Lf.control.zoom({ position: 'bottomleft' }).addTo(map);
+      Lf.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map).addAttribution('© OpenStreetMap');
+
+      // Base marker
+      const baseIcon = Lf.divIcon({ className: '', html: `<div style="width:30px;height:30px;border-radius:50%;background:${baseColor};border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:15px">🏠</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+      Lf.marker([locData.lat, locData.lng], { icon: baseIcon }).addTo(map).bindPopup(`<b>${locData.name} Base</b>`);
+
+      // Fit to all combo points
+      const allPts = [[locData.lat, locData.lng]];
+      combos.forEach(c => c.acts.forEach(a => allPts.push(getCoords(a, locData))));
+      if (allPts.length > 1) map.fitBounds(allPts, { padding: [40, 40] });
+      leafletMap.current = map;
+    });
+    return () => { if (leafletMap.current) { leafletMap.current.remove(); leafletMap.current = null; } };
+  }, [locData]);
+
+  // Draw/clear route when activeCi changes
+  useEffect(() => {
+    const Lf = window.L;
+    const map = leafletMap.current;
+    if (!Lf || !map) return;
+
+    // Clear previous
+    routeLayers.current.forEach(l => map.removeLayer(l));
+    markerLayers.current.forEach(l => map.removeLayer(l));
+    routeLayers.current = [];
+    markerLayers.current = [];
+
+    if (activeCi === null) {
+      // Show faint dots for all combos
+      combos.forEach((c, ci) => {
+        const clr = COMBO_COLORS[ci % COMBO_COLORS.length];
+        c.acts.forEach((a, ai) => {
+          const [lat, lng] = getCoords(a, locData);
+          const icon = Lf.divIcon({ className: '', html: `<div style="width:18px;height:18px;border-radius:50%;background:${clr}50;border:2px solid ${clr};box-shadow:0 1px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;font-family:'Dela Gothic One',sans-serif">${ai + 1}</div>`, iconSize: [18, 18], iconAnchor: [9, 9] });
+          const m = Lf.marker([lat, lng], { icon }).addTo(map);
+          markerLayers.current.push(m);
+        });
+        // Faint route line
+        const pts = [[locData.lat, locData.lng], ...c.acts.map(a => getCoords(a, locData)), [locData.lat, locData.lng]];
+        const line = Lf.polyline(pts, { color: clr, weight: 2, opacity: 0.25, dashArray: "6 4" }).addTo(map);
+        routeLayers.current.push(line);
+      });
+    } else {
+      // Selected combo: bright route + big markers with info popups
+      const c = combos[activeCi];
+      const clr = COMBO_COLORS[activeCi % COMBO_COLORS.length];
+      const pts = [[locData.lat, locData.lng]];
+
+      c.acts.forEach((a, ai) => {
+        const [lat, lng] = getCoords(a, locData);
+        pts.push([lat, lng]);
+        const cat = CATEGORIES.find(ct => ct.id === a.cat);
+        const adj = Math.round(a.travelMin * mult);
+        const icon = Lf.divIcon({ className: '', html: `<div style="width:30px;height:30px;border-radius:50%;background:${clr};border:3px solid #fff;box-shadow:0 2px 10px ${clr}80;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;font-family:'Dela Gothic One',sans-serif">${ai + 1}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+        const m = Lf.marker([lat, lng], { icon }).addTo(map);
+        m.bindPopup(`<div style="font-family:sans-serif;min-width:180px;padding:2px"><div style="font-weight:700;font-size:14px;margin-bottom:3px">${ai + 1}. ${a.name}</div><div style="font-size:12px;color:#888;margin-bottom:4px">${a.nameJp}</div><div style="font-size:12px;margin-bottom:3px">★ ${a.rating} · ${cat ? cat.emoji + ' ' + cat.label : ''}</div><div style="font-size:12px;color:#666">${tMode === 'walking' ? '🚶' : tMode === 'bus' ? '🚌' : '🚗'} ${adj}min travel · ${a.activityMin}min activity</div><div style="font-size:12px;color:#666">${a.cost}</div><div style="font-size:11px;color:${clr};font-style:italic;margin-top:4px;line-height:1.4">💡 ${a.tip}</div></div>`).openPopup();
+        m.on('click', () => { m.openPopup(); });
+        markerLayers.current.push(m);
+      });
+      pts.push([locData.lat, locData.lng]);
+
+      // Draw route
+      const line = Lf.polyline(pts, { color: clr, weight: 4, opacity: 0.9 }).addTo(map);
+      routeLayers.current.push(line);
+
+      // Animated dashes
+      const dash = Lf.polyline(pts, { color: "#fff", weight: 2, opacity: 0.5, dashArray: "4 8", dashOffset: "0" }).addTo(map);
+      routeLayers.current.push(dash);
+
+      // Fit to this combo's bounds
+      const comboBounds = [[locData.lat, locData.lng], ...c.acts.map(a => getCoords(a, locData))];
+      map.fitBounds(comboBounds, { padding: [50, 50] });
+
+      // Open first popup
+      if (markerLayers.current.length > 0) markerLayers.current[0].openPopup();
+    }
+  }, [activeCi, combos, locData]);
+
+  const recenter = () => {
+    if (!leafletMap.current) return;
+    if (activeCi !== null) {
+      const c = combos[activeCi];
+      const pts = [[locData.lat, locData.lng], ...c.acts.map(a => getCoords(a, locData))];
+      leafletMap.current.fitBounds(pts, { padding: [50, 50] });
+    } else {
+      const all = [[locData.lat, locData.lng]];
+      combos.forEach(c => c.acts.forEach(a => all.push(getCoords(a, locData))));
+      leafletMap.current.fitBounds(all, { padding: [40, 40] });
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "fu 0.3s both" }} onClick={onClose}>
+      <div style={{ width: "100%", maxWidth: 600, maxHeight: "90vh", background: "#0e0e22", border: `1px solid ${baseColor}40`, borderRadius: 20, overflow: "hidden", position: "relative", boxShadow: `0 8px 40px ${baseColor}20`, display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${baseColor}20`, flexShrink: 0 }}>
+          <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 14, color: baseColor }}>🗺 {combos.length} Combos</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {activeCi !== null && <button onClick={() => setActiveCi(null)} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "5px 12px", cursor: "pointer", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: "rgba(255,255,255,0.6)" }}>Show All</button>}
+            <button onClick={recenter} style={{ background: `${baseColor}20`, border: `1px solid ${baseColor}40`, borderRadius: 8, padding: "5px 12px", cursor: "pointer", fontFamily: "'Zen Kaku Gothic New'", fontSize: 12, color: baseColor }}>⊕ Recenter</button>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, width: 32, height: 32, cursor: "pointer", color: "#fff", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>✕</button>
+          </div>
+        </div>
+
+        {/* Map */}
+        <div ref={mapRef} style={{ width: "100%", height: "min(50vh, 380px)", flexShrink: 0 }} />
+
+        {/* Combo selector */}
+        <div style={{ borderTop: `1px solid ${baseColor}20`, padding: "10px 14px", overflow: "auto", maxHeight: 200, flexShrink: 0 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {combos.map((c, ci) => {
+              const clr = COMBO_COLORS[ci % COMBO_COLORS.length];
+              const isActive = activeCi === ci;
+              return (
+                <button key={ci} onClick={() => setActiveCi(isActive ? null : ci)} style={{ display: "flex", alignItems: "center", gap: 10, background: isActive ? `${clr}20` : "rgba(255,255,255,0.03)", border: `1px solid ${isActive ? clr + '60' : 'rgba(255,255,255,0.08)'}`, borderRadius: 10, padding: "8px 12px", cursor: "pointer", textAlign: "left", transition: "all 0.2s" }}>
+                  <div style={{ width: 12, height: 12, borderRadius: "50%", background: clr, flexShrink: 0, boxShadow: isActive ? `0 0 8px ${clr}` : 'none' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 12, color: isActive ? "#fff" : "rgba(255,255,255,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {c.acts.map((a, ai) => <span key={ai}>{ai > 0 && <span style={{ color: clr, margin: "0 4px" }}>→</span>}{a.name}</span>)}
+                    </div>
+                    <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                      ★ {c.avg} · ⌛ ~{fmtD(c.tot)} · {c.acts.length} stops
+                    </div>
+                  </div>
+                  {isActive && <span style={{ color: clr, fontSize: 14 }}>▶</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selected combo info cards */}
+        {activeCi !== null && (() => {
+          const c = combos[activeCi];
+          const clr = COMBO_COLORS[activeCi % COMBO_COLORS.length];
+          return (
+            <div style={{ borderTop: `1px solid ${clr}30`, padding: "10px 14px", overflow: "auto", maxHeight: 160, flexShrink: 0, background: `${clr}08` }}>
+              <div style={{ display: "flex", gap: 8, overflow: "auto", paddingBottom: 4 }}>
+                {c.acts.map((a, ai) => {
+                  const cat = CATEGORIES.find(ct => ct.id === a.cat);
+                  const adj = Math.round(a.travelMin * mult);
+                  return (
+                    <div key={ai} style={{ background: "rgba(255,255,255,0.95)", borderRadius: 12, padding: "10px 14px", minWidth: 200, maxWidth: 240, flexShrink: 0, boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                        <div style={{ width: 22, height: 22, borderRadius: "50%", background: clr, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Dela Gothic One'", fontSize: 11, color: "#fff", flexShrink: 0 }}>{ai + 1}</div>
+                        <div style={{ fontFamily: "'Dela Gothic One'", fontSize: 13, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</div>
+                      </div>
+                      <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "#888", marginBottom: 3 }}>{a.nameJp}</div>
+                      <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "#555" }}>
+                        ★ {a.rating} · {cat ? cat.emoji + ' ' + cat.label : ''} · {a.cost}
+                      </div>
+                      <div style={{ fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: "#777", marginTop: 2 }}>
+                        {tMode === 'walking' ? '🚶' : tMode === 'bus' ? '🚌' : '🚗'} {adj}min · {a.activityMin}min activity
+                      </div>
+                      <button onClick={() => { onClose(); setTimeout(() => onSelect && onSelect(a.name), 100); }} style={{ marginTop: 6, background: `${clr}20`, border: `1px solid ${clr}40`, borderRadius: 6, padding: "3px 10px", cursor: "pointer", fontFamily: "'Zen Kaku Gothic New'", fontSize: 11, color: clr }}>Jump to listing</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    </div>
+  );
+};
+
 // ─── MAIN ───
 export default function App() {
   const [loc, setLoc] = useState(null);
@@ -857,6 +1137,7 @@ export default function App() {
   // Header clock toggle
   const [showClock, setShowClock] = useState(false);
   const [mapActivities, setMapActivities] = useState(null); // array of activities to show on map, or null
+  const [comboMapData, setComboMapData] = useState(null); // combos array for combo map, or null
   const scrollToActivity = useCallback((name) => {
     const el = document.querySelector(`[data-activity="${CSS.escape(name)}"]`);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1015,6 +1296,7 @@ export default function App() {
 
       {/* MAP OVERLAY */}
       {mapActivities && L && <MapCard activities={mapActivities} locData={LOCATIONS[loc]} color={L.color} onClose={() => setMapActivities(null)} onSelect={scrollToActivity} />}
+      {comboMapData && L && <ComboMapCard combos={comboMapData} locData={LOCATIONS[loc]} baseColor={L.color} onClose={() => setComboMapData(null)} onSelect={scrollToActivity} tMode={tMode} />}
 
       {/* HEADER */}
       <div style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(10,10,26,0.75)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -1216,7 +1498,7 @@ export default function App() {
           {tab === "extra" && !noTime && (extra.length > 0 ? <div style={{ position: "relative", zIndex: 2 }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><div style={{ background: `${L.color}08`, border: `1px solid ${L.color}20`, borderRadius: 12, padding: "12px 16px", flex: 1, fontFamily: "'Zen Kaku Gothic New'", fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>These match your vibe but need more than <strong style={{ color: L.color }}>{fmtD(time)}</strong>. Plan for a longer break.</div><div style={{ marginLeft: 10, flexShrink: 0, display: "flex", gap: 8 }}><MapBtn onClick={() => setMapActivities(extra)} color={L.color} /><ShareBtn activities={extra} title="Extra Time Activities" locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All" dH={dH} dM={dM} noTime={noTime} mult={mult} /></div></div><div style={{ display: "flex", flexDirection: "column", gap: 16 }}>{extra.map((a, i) => { const adj = Math.round(a.travelMin * mult); const ov = (adj * 2 + a.activityMin) - time; return (<div key={a.name} style={{ position: "relative" }}><div style={{ position: "absolute", top: 14, left: 14, zIndex: 6, background: "linear-gradient(135deg,#ff4444,#cc0000)", borderRadius: 8, padding: "4px 10px", fontFamily: "'Dela Gothic One'", fontSize: 12, color: "#fff" }}>+{fmtD(ov)} over</div><Cd a={a} color={L.color} i={i} dH={dH} dM={dM} tMode={tMode} noTime={false} mapLetter={mapActivities && mapActivities.includes(a) ? LETTERS[mapActivities.indexOf(a)] : null} /></div>); })}</div></div> : <Emp msg="All matching activities fit — nice!" />)}
 
           {tab === "combo" && (combos.length > 0 ? <div style={{ display: "flex", flexDirection: "column", gap: 14, position: "relative", zIndex: 2 }}>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: -6 }}><MapBtn onClick={() => { const unique = []; const seen = new Set(); combos.forEach(c => c.acts.forEach(a => { if (!seen.has(a.name)) { seen.add(a.name); unique.push(a); } })); setMapActivities(unique); }} color={L.color} /><ShareBtn activities={combos.flatMap(c => c.acts)} title={`${combos.length} Combos`} locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All Combos" dH={dH} dM={dM} noTime={noTime} mult={mult} /></div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: -6 }}><MapBtn onClick={() => setComboMapData(combos)} color={L.color} /><ShareBtn activities={combos.flatMap(c => c.acts)} title={`${combos.length} Combos`} locationName={L.name} tMode={tMode} color={L.color} label="📤 Share All Combos" dH={dH} dM={dM} noTime={noTime} mult={mult} /></div>
             {combos.map((c, ci) => {
               const isE = expC === ci;
               // Build timeline (used only in timed mode)
