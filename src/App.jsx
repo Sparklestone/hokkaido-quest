@@ -396,7 +396,7 @@ const travelMult = (mode) => mode === "walking" ? 4 : mode === "bus" ? 1.5 : 1;
 
 // ─── DATA ───
 const LOCATIONS = {
-  rusutsu: { name: "Rusutsu", nameJp: "ルスツ", color: "#4ECDC4", accent: "#1A535C", bg: "linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%)", info: "Rusutsu is Hokkaido's best-kept secret — a massive resort with virtually no lift lines, surrounded by pristine volcanic landscapes. Unlike international Niseko or urban Sapporo, Rusutsu offers a deeply Japanese ski experience. Its proximity to Lake Toya and Noboribetsu makes it a gateway to dramatic natural scenery.", lat: 42.7538, lng: 140.5563 },
+  rusutsu: { name: "Rusutsu", nameJp: "ルスツ", color: "#4ECDC4", accent: "#1A535C", bg: "linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%)", info: "Rusutsu is Hokkaido's best-kept secret — a massive resort with virtually no lift lines, surrounded by pristine volcanic landscapes. Unlike international Niseko or urban Sapporo, Rusutsu offers a deeply Japanese ski experience. Its proximity to Lake Toya and Noboribetsu makes it a gateway to dramatic natural scenery.", lat: 42.7560, lng: 140.8700 },
   niseko: { name: "Niseko", nameJp: "ニセコ", color: "#FF6B6B", accent: "#C73E3E", bg: "linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)", info: "Niseko is Japan's most famous international ski destination, legendary for impossibly light powder and the iconic Mt. Yotei backdrop. Vibrant après-ski culture — craft breweries, whisky bars, farm-to-table dining. The most versatile base for non-skiers with dog sledding, snowshoeing, and glassblowing.", lat: 42.8625, lng: 140.6880 },
   sapporo: { name: "Sapporo", nameJp: "札幌", color: "#FFE66D", accent: "#F4A261", bg: "linear-gradient(135deg,#0c0c1d 0%,#1a1a3e 50%,#2d1b69 100%)", info: "Sapporo is Hokkaido's capital — a proper metropolis with world-class food, nightlife, and culture. Famous for miso ramen, Genghis Khan BBQ, the Snow Festival, and Sapporo beer. Depth you can't find in resort towns: Ainu museums, Noguchi sculpture parks, hidden coffee shops, and Japan's best bar district.", lat: 43.0621, lng: 141.3544 },
 };
@@ -404,31 +404,31 @@ const LOCATIONS = {
 // Known landmark coordinates for map accuracy
 const KNOWN_COORDS = {
   // ─── RUSUTSU RESORT (inside resort, travelMin 3) ───
-  "Fuka+Restaurant+Rusutsu+Resort":[42.7540,140.5570],"Sekkatei+Rusutsu+Resort":[42.7536,140.5558],
-  "Orbist+Bar+Rusutsu+Resort":[42.7535,140.5565],"Pub+Cricket+Rusutsu+Resort":[42.7537,140.5562],
-  "Costa+Terrazza+Rusutsu+Resort":[42.7542,140.5575],"Kanten+Rusutsu+Resort":[42.7539,140.5572],
-  "Rusutsu+Resort+Carousel":[42.7545,140.5580],"Rusutsu+Resort+Wave+Pool":[42.7543,140.5577],
-  "Rusutsu+Resort+Climbing+Wall":[42.7541,140.5583],"Rusutsu+Resort+Daniel+Street":[42.7538,140.5568],
-  "Rusutsu+Resort+Entertainment":[42.7544,140.5578],"Rusutsu+Resort+Kotobuki+Onsen":[42.7548,140.5560],
-  "Rusutsu+Resort+Shop":[42.7536,140.5566],"Rusutsu+Resort+Cheese+Making":[42.7546,140.5572],
-  "Westin+Rusutsu+Resort+Spa":[42.7555,140.5545],
-  // ─── RUSUTSU VILLAGE (travelMin 5) ───
-  "Uo+Teru+Rusutsu":[42.7520,140.5550],"Mokumokuya+Rusutsu":[42.7515,140.5545],
-  "Rodeo+Drive+Rusutsu":[42.7518,140.5540],"Rusutsu+Sakaba":[42.7522,140.5555],
-  "Tanpopo+Shokudo+Rusutsu":[42.7525,140.5560],"The+Red+House+Rusutsu":[42.7513,140.5535],
-  "Nabedokoro+Yochan+Rusutsu":[42.7510,140.5548],"Youtei+Izakaya+Rusutsu":[42.7517,140.5552],
-  "La+queue+crochet+Rusutsu":[42.7505,140.5520],"Seicomart+Rusutsu":[42.7523,140.5558],
-  "7-Eleven+Rusutsu+Resort":[42.7526,140.5562],
+  "Fuka+Restaurant+Rusutsu+Resort":[42.7565,140.8710],"Sekkatei+Rusutsu+Resort":[42.7558,140.8695],
+  "Orbist+Bar+Rusutsu+Resort":[42.7555,140.8705],"Pub+Cricket+Rusutsu+Resort":[42.7562,140.8702],
+  "Costa+Terrazza+Rusutsu+Resort":[42.7568,140.8715],"Kanten+Rusutsu+Resort":[42.7563,140.8712],
+  "Rusutsu+Resort+Carousel":[42.7572,140.8720],"Rusutsu+Resort+Wave+Pool":[42.7570,140.8717],
+  "Rusutsu+Resort+Climbing+Wall":[42.7567,140.8723],"Rusutsu+Resort+Daniel+Street":[42.7560,140.8708],
+  "Rusutsu+Resort+Entertainment":[42.7571,140.8718],"Rusutsu+Resort+Kotobuki+Onsen":[42.7575,140.8698],
+  "Rusutsu+Resort+Shop":[42.7558,140.8706],"Rusutsu+Resort+Cheese+Making":[42.7573,140.8712],
+  "Westin+Rusutsu+Resort+Spa":[42.7580,140.8685],
+  // ─── RUSUTSU VILLAGE (travelMin 5, along Rt230) ───
+  "Uo+Teru+Rusutsu":[42.7548,140.8680],"Mokumokuya+Rusutsu":[42.7545,140.8672],
+  "Rodeo+Drive+Rusutsu":[42.7550,140.8668],"Rusutsu+Sakaba":[42.7552,140.8685],
+  "Tanpopo+Shokudo+Rusutsu":[42.7555,140.8690],"The+Red+House+Rusutsu":[42.7542,140.8660],
+  "Nabedokoro+Yochan+Rusutsu":[42.7540,140.8675],"Youtei+Izakaya+Rusutsu":[42.7547,140.8682],
+  "La+queue+crochet+Rusutsu":[42.7535,140.8650],"Seicomart+Rusutsu":[42.7553,140.8688],
+  "7-Eleven+Rusutsu+Resort":[42.7556,140.8692],
   // ─── RUSUTSU OUTDOOR (travelMin 5-10) ───
-  "Rusutsu+Snowmobile+Tour":[42.7570,140.5600],"Rusutsu+Snow+Rafting":[42.7565,140.5595],
-  "Rusutsu+Snow+Tubing":[42.7560,140.5590],"Rusutsu+Snowshoe+Trek":[42.7575,140.5520],
-  "Rusutsu+Shrine+Hokkaido":[42.7555,140.5510],
-  // ─── KIMOBETSU (travelMin 10, town is ~15km E of Rusutsu along Rt230 at 42.80, 140.93) ───
-  "TAKiBi+Kimobetsu":[42.7978,140.9280],"Kikoz+Kimobetsu":[42.7965,140.9260],
-  "Potato+Inn+Papa+Kimobetsu":[42.7970,140.9300],"Kimobetsu+Izakaya":[42.7975,140.9290],
-  "Kimobetsu+Art+Studio":[42.7985,140.9270],
+  "Rusutsu+Snowmobile+Tour":[42.7590,140.8740],"Rusutsu+Snow+Rafting":[42.7585,140.8735],
+  "Rusutsu+Snow+Tubing":[42.7582,140.8730],"Rusutsu+Snowshoe+Trek":[42.7595,140.8660],
+  "Rusutsu+Shrine+Hokkaido":[42.7578,140.8650],
+  // ─── KIMOBETSU (travelMin 10, along Rt230 toward Sapporo) ───
+  "TAKiBi+Kimobetsu":[42.7850,140.9250],"Kikoz+Kimobetsu":[42.7840,140.9230],
+  "Potato+Inn+Papa+Kimobetsu":[42.7845,140.9270],"Kimobetsu+Izakaya":[42.7848,140.9260],
+  "Kimobetsu+Art+Studio":[42.7855,140.9240],
   // ─── RUSUTSU FARTHER (travelMin 10-15) ───
-  "Michi+no+Eki+230+Rusutsu":[42.7580,140.5580],
+  "Michi+no+Eki+230+Rusutsu":[42.7590,140.8580],
   // ─── LAKE TOYA (travelMin 30) ───
   "Lake+Toya+Hokkaido":[42.596,140.856],"Lake+Toya+Cafe":[42.5920,140.8500],
   "Lake+Toya+Fireworks":[42.5960,140.8520],"Lake+Toya+Glass+Art":[42.5900,140.8480],
